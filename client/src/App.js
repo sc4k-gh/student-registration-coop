@@ -2,8 +2,8 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import LandingPage from './landing_page';
-import DashboardScreen from './dashboard_page';
+import LandingPage from './screens/landing_page';
+import DashboardScreen from './screens/dashboard_page';
 
 const Stack = createNativeStackNavigator();
 
