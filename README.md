@@ -46,6 +46,10 @@ Before running the project, ensure you have the following installed:
     -   [Google Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)
 
 ## Installation & Setup
+0.  **Clone the project**:
+    ```bash
+    cd 
+    ```
 
 1.  **Navigate to the client directory**:
     ```bash
