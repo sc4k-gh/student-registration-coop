@@ -48,7 +48,7 @@ Before running the project, ensure you have the following installed:
 ## Installation & Setup
 0.  **Clone the project**:
     ```bash
-    cd 
+    git clone https://github.com/sc4k-gh/student-registration-coop.git 
     ```
 
 1.  **Navigate to the client directory**:
