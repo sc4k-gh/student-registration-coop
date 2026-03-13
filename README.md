@@ -10,32 +10,6 @@ This application serves as a Proof of Concept (POC) for a student management sys
 - Manage Teachers.
 - Configure Application Settings.
 
-## Project Structure
-
-The project follows a scalable, industry-standard directory structure:
-
-```
-client/
-  ├── src/
-  │   ├── assets/         # Static assets (images, fonts)
-  │   ├── components/     # Reusable UI components (Buttons, Cards)
-  │   ├── navigation/     # Navigation configuration (Stack/Drawer)
-  │   ├── screens/        # Screen-level components (Dashboard, etc.)
-  │   ├── services/       # API services and data fetching logic
-  │   ├── styles/         # Global styles and theme constants
-  │   ├── utils/          # Helper functions and utilities
-  │   └── App.js          # Application entry point
-  ├── package.json        # Dependencies and scripts imports
-  └── ...
-database/
-  └── schema.sql          # PostgreSQL database schema
-```
-
-### Key Files
-- **`client/src/App.js`**: The main entry point that sets up the `SafeAreaProvider` and renders the main navigator.
-- **`client/src/navigation/AppNavigator.js`**: Handles the app's navigation logic, combining Stack and Drawer navigators.
-- **`client/src/styles/theme.js`**: Defines the application's color palette and typography for consistent styling.
-
 ## Prerequisites
 
 Before running the project, ensure you have the following installed:
