@@ -1,56 +1,114 @@
 # Student Registration App
 
-A robust mobile application for managing student registrations, teachers, and courses, built with React Native (Expo).
+A mobile application for managing student registrations at a tutoring academy, built with React Native (Expo) and Node.js.
 
 ## Project Overview
 
-This application serves as a Proof of Concept (POC) for a student management system. It allows administrators to:
-- View key metrics via a Dashboard.
-- Manage Students (List, Add, Edit).
-- Manage Teachers.
-- Configure Application Settings.
+This is a POC for a tutoring academy student registration system. It supports two roles:
+
+- **Admin** — view and manage students, teachers, programs, time slots, and approve/reject registrations
+- **Parent** — register one or more children into tutoring programs with fixed time slots
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Mobile App | React Native (Expo) |
+| State Management | React Query |
+| Backend API | Node.js (Express) |
+| Database | PostgreSQL (Supabase) |
+| Authentication | Supabase Auth |
+| Build & Deploy | EAS Build → App Store / Google Play |
+| API Hosting | Render |
+
+## Project Structure
+
+```
+student-registration-coop/
+├── client/                        # React Native (Expo) mobile app
+│   └── src/
+│       ├── api/
+│       │   └── client.js          # API client (base URL, auth headers)
+│       ├── context/
+│       │   └── AuthContext.js     # Auth state provider
+│       ├── navigation/
+│       │   └── AppNavigator.js
+│       ├── screens/
+│       │   ├── auth/
+│       │   │   ├── login_page.js
+│       │   │   └── signup_page.js
+│       │   ├── parent/
+│       │   │   └── registration_form.js
+│       │   ├── dashboard_page.js
+│       │   ├── courses_page.js
+│       │   ├── student_page.js
+│       │   ├── teachers_page.js
+│       │   ├── settings_page.js
+│       │   └── landing_page.js
+│       ├── styles/
+│       │   └── theme.js
+│       └── assets/
+├── server/                        # Node.js Express API
+│   ├── package.json
+│   ├── .env.example
+│   └── src/
+│       ├── index.js               # Express entry point
+│       ├── config/
+│       │   └── supabase.js        # Supabase client config
+│       ├── middleware/
+│       │   ├── auth.js            # JWT verification
+│       │   └── roleGuard.js       # Role-based access control
+│       ├── routes/
+│       │   ├── auth.js
+│       │   ├── programs.js
+│       │   ├── locations.js
+│       │   ├── timeSlots.js
+│       │   ├── registrations.js
+│       │   └── admin.js
+│       └── controllers/
+│           ├── authController.js
+│           ├── programController.js
+│           ├── locationController.js
+│           ├── timeSlotController.js
+│           ├── registrationController.js
+│           └── adminController.js
+├── database/
+│   ├── schema.sql                 # CREATE TABLE statements
+│   └── seed.sql                   # Seed data (admin account, sample data)
+└── docs/
+    └── architecture.md            # System design documentation
+```
 
 ## Prerequisites
 
-Before running the project, ensure you have the following installed:
+- **Node.js** (LTS): [nodejs.org](https://nodejs.org/)
+- **Expo Go** app on your device — [iOS](https://apps.apple.com/us/app/expo-go/id982107779) | [Android](https://play.google.com/store/apps/details?id=host.exp.exponent)
+- **Supabase** account for database and auth
 
-1.  **Node.js** (LTS version recommended): [Download here](https://nodejs.org/)
-2.  **Expo Go**: Install the Expo Go app on your iOS or Android device.
-    -   [iOS App Store](https://apps.apple.com/us/app/expo-go/id982107779)
-    -   [Google Play Store](https://play.google.com/store/apps/details?id=host.exp.exponent)
+## Setup
 
-## Installation & Setup
-0.  **Clone the project**:
-    ```bash
-    git clone https://github.com/sc4k-gh/student-registration-coop.git 
-    ```
+### 1. Clone the repository
+```bash
+git clone https://github.com/sc4k-gh/student-registration-coop.git
+cd student-registration-coop
+```
 
-1.  **Navigate to the client directory**:
-    ```bash
-    cd client
-    ```
+### 2. Backend (server)
+```bash
+cd server
+npm install
+cp .env.example .env   # fill in your Supabase credentials
+node src/index.js
+```
 
-2.  **Install dependencies**:
-    ```bash
-    npm install
-    ```
+### 3. Frontend (client)
+```bash
+cd client
+npm install
+npx expo start
+```
 
-## Running the Application
+## Running the App
 
-1.  **Start the development server**:
-    ```bash
-    npx expo start
-    ```
-
-2.  **Open the App**:
-    -   **On Physical Device**: Scan the QR code displayed in the terminal using the Expo Go app (Android) or the Camera app (iOS).
-    -   **On Emulator/Simulator**: Press `a` (Android) or `i` (iOS) in the terminal window to launch on a connected emulator or simulator.
-
-## Testing
-
-To verify the installation and code changes:
-1.  Run the application using `npx expo start`.
-2.  Navigate through the app:
-    -   **Landing Page**: Should appear first. Click "Get Started" (or equivalent) to enter.
-    -   **Dashboard**: Check if the sidebar (drawer) opens.
-    -   **Screens**: Visit "Students", "Teachers", and "Settings" via the drawer to ensure all routes are working.
+- **Physical device**: Scan the QR code with Expo Go (Android) or Camera app (iOS)
+- **Emulator**: Press `a` (Android) or `i` (iOS) in the terminal
