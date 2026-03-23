@@ -1,79 +1,86 @@
+const supabase = require('./supabase')
+
 const express = require('express');
 const router = express.Router();
 
-// Temporary mock database for testing locally; REAL database added later.
-let programs = [
-    {
-        id: "1",
-        name: "Piano Basics",
-        min_age: 5,
-        max_age: 8,
-        "description": "Introductory piano course for young learners",
-        "is_active": true
-    }
-]
-
 // GET /programs - all available programs, with optional age filtering.
-router.get('/programs', (req, res) => {
-    const { age } = req.query; // Age is specified using URL queries (e.g. /programs/?age=7).
+// Age is specified using URL queries (e.g. /programs/?age=7).
+router.get('/programs', async (req, res) => { 
+    const { age } = req.query;
+
+    let query = supabase
+        .from('programs')
+        .select('*')
 
     if (age) {
-        const filtered = programs.filter(p =>
-            p.min_age <= age && age <= p.max_age // only return programs within specified age range
-        )
-        return res.json({programs: filtered});
+        query = query.filter('target_age', 'cs', age) // Only return programs within specified age range.
     }
-    res.json({programs}) // No age range, return everything.
+
+    const { data, error } = await query;
+
+    if (error) return res.status(500).json({ error: error.message });
+
+    res.json({ programs: data });
 })
 
 // POST /programs - add a new program.
-router.post('/programs', (req, res) => {
-    const { name, min_age, max_age, description } = req.body; // Extract the given program data.
+router.post('/programs', async (req, res) => {
+    const { name, level, target_age, description, prerequisites } = req.body; // Extract the given program data.
 
-    const newProgram = {
-        id: crypto.randomUUID(),
-        name,
-        min_age,
-        max_age,
-        description,
-        is_active: true
-    }
-    programs.push(newProgram); // Add new program to the mock database array.
-    res.status(201).json({ message: 'Program created', program: newProgram });
+
+    const { data, error } = await supabase
+        .from('programs')
+        .insert({
+            name,
+            level,
+            target_age,
+            description,
+            prerequisites
+        })
+        .select()
+        .single() // Return the newly created program as a single object.
+
+    if (error) return res.status(500).json({ error: error.message })
+
+    res.status(201).json({ message: 'Program created', program: data });
 })
 
 // PUT /programs/:id - update an existing program.
-router.put('/programs/:id', (req, res) => {
-    const { id } = req.params // get the program ID from the URL.
-    const { name, min_age, max_age, description, is_active } = req.body; // Extract the given program data.
-    
-    const searchID = programs.findIndex(p => p.id === id); // Find the index of the program with the matching ID.
+router.put('/programs/:id', async (req, res) => {
+    const { id } = req.params; // get the program ID from the URL.
 
-    if (searchID !== -1) { // -1 means the program was not found.
-        programs[searchID] = { ...programs[searchID], ...req.body } // Update existing data with the new content.
-        res.status(200).json({ message: 'Updated Program object', program: programs[searchID] });
-    }
+    const { data, error } = await supabase
+        .from('programs')
+        .update(req.body) // Update only the fields that were sent.
+        .eq('id', id) // Only update the program with the matching ID.
+        .select()
+        .single() // Return the updated program as a single object.
 
-    else {
-        res.status(404).send('Program not found');
-    }
 
+     if (error) return res.status(500).json({ error: error.message }); // Error 500: Internal error.
+    if (!data) return res.status(404).json({error: 'Program not found'}); // Error 404: No matching ID.
+
+
+    res.status(200).json({ message: 'Updated Program object', program: data });
 })
 
 // DELETE /programs/:id - deactivate an existing program.
-router.delete('/programs/:id', (req, res) => {
-    const { id } = req.params // get the program ID from the URL.
+router.delete('/programs/:id', async (req, res) => {
+    const { id } = req.params; // get the program ID from the URL.
     
-    const searchID = programs.findIndex(p => p.id === id); // Find the index of the program with the matching ID.
+    const { data, error } = await supabase
+        .from('programs')
+        .update({status: 'inactive'}) // Soft delete by setting status to inactive.
+        .eq('id', id) // Only update the program with the matching ID.
+        .select()
+        .single() // Return the updated program as a single object.
 
-    if (searchID !== -1) { // -1 means the program was not found.
-        programs[searchID].is_active = false; // Soft delete (deactivate) the selected program.
-        res.status(200).send('Program deactivated');
-    }
 
-    else {
-        res.status(404).send('Program not found');
-    }
+     if (error) return res.status(500).json({ error: error.message }); // Error 500: Internal error.
+    if (!data) return res.status(404).json({error: 'Program not found'}); // Error 404: No matching ID.
+
+
+    res.status(200).json({ message: 'Program deactivated', program: data });
 
 })
 
