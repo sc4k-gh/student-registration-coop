@@ -27,8 +27,8 @@
     "react-native-worklets": "0.5.1",
     "supabase": "^2.83.0",
     "supabase-js": "^0.0.1-security",
-    "express": "11.8.0",
-    "jsonwebtoken": "11.8.0"
+    "express": "5.2.1",
+    "jsonwebtoken": "9.0.3"
   },
   "private": true,
   "devDependencies": {
