@@ -1,3 +1,14 @@
+import 'dotenv/config';
+const express = require('express');
+const jsonwebtoken = require('jsonwebtoken');
+const app = express();
+const port = 8000;
+const { createClient } = require("@supabase/supabase-js");
+const supabaseUrl = process.env.DATABASE_URL;
+const supabaseKey = SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+const router = express.Router();
+
 //Add teacher, ADMIN
 app.post('/admin/teachers', async (req, res) => {
   const { data, error } = await supabase
@@ -92,3 +103,4 @@ app.post('/admin/time-slots', async (req, res) => {
     }
 });
 
+module.exports = router; //Export routes

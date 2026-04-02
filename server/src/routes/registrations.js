@@ -1,5 +1,16 @@
+import 'dotenv/config';
+const express = require('express');
+const jsonwebtoken = require('jsonwebtoken');
+const app = express();
+const port = 8000;
+const { createClient } = require("@supabase/supabase-js");
+const supabaseUrl = process.env.DATABASE_URL;
+const supabaseKey = SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+const router = express.Router();
+
 //View own registrations + status
-app.get('/registrations/my', async (req, res) => {
+router.get('/registrations/my', async (req, res) => {
   const { data, error } = await supabase
     .from('registrations')
     .select()
@@ -27,3 +38,5 @@ app.post('/registrations', async (req, res) => {
     res.send(data);
   }
 });
+
+module.exports = router; //Export routes
