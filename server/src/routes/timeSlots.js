@@ -1,11 +1,9 @@
 import 'dotenv/config';
-const express = require('express');
-const jsonwebtoken = require('jsonwebtoken');
-const app = express();
-const port = 8000;
-const { createClient } = require("@supabase/supabase-js");
+import express from 'express';
+import jsonwebtoken from 'jsonwebtoken';
+import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.DATABASE_URL;
-const supabaseKey = SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+const supabaseKey = process.env.SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 const router = express.Router();
 
@@ -18,5 +16,4 @@ router.get('/?program_id=&mode=&location_id=', async (req, res) => {
     .eq('program_id', req.params.id); // Retrieve programs and timeslots matching given ID
   res.send(data);
 });
-
-module.exports = router; //Export routes
+export default router; //Export routes

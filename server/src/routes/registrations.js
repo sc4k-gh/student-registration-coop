@@ -1,16 +1,14 @@
 import 'dotenv/config';
-const express = require('express');
-const jsonwebtoken = require('jsonwebtoken');
-const app = express();
-const port = 8000;
-const { createClient } = require("@supabase/supabase-js");
+import express from 'express';
+import jsonwebtoken from 'jsonwebtoken';
+import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.DATABASE_URL;
-const supabaseKey = SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+const supabaseKey = process.env.SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 const router = express.Router();
 
 //View own registrations + status
-router.get('/registrations/my', async (req, res) => {
+router.get('/my', async (req, res) => {
   const { data, error } = await supabase
     .from('registrations')
     .select()
@@ -19,7 +17,7 @@ router.get('/registrations/my', async (req, res) => {
 });
 
 //Submit a registration, PARENT
-app.post('/registrations', async (req, res) => {
+router.post('/', async (req, res) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (data.user.role == 'parent') {
     const { data, error } = await supabase
@@ -39,4 +37,4 @@ app.post('/registrations', async (req, res) => {
   }
 });
 
-module.exports = router; //Export routes
+export default router; //Export routes

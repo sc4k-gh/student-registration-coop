@@ -1,16 +1,14 @@
 import 'dotenv/config';
-const express = require('express');
-const jsonwebtoken = require('jsonwebtoken');
-const app = express();
-const port = 8000;
-const { createClient } = require("@supabase/supabase-js");
+import express from 'express';
+import jsonwebtoken from 'jsonwebtoken';
+import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env.DATABASE_URL;
-const supabaseKey = SUPABASE_PUBLISHABLE_DEFAULT_KEY;
+const supabaseKey = process.env.SUPABASE_PUBLISHABLE_DEFAULT_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 const router = express.Router();
 
 //Add teacher, ADMIN
-app.post('/admin/teachers', async (req, res) => {
+router.post('/teachers', async (req, res) => {
   const { data, error } = await supabase
     .from('teachers')
     .insert({
@@ -25,7 +23,7 @@ app.post('/admin/teachers', async (req, res) => {
 
 //TBA: Parent info + fix programs
 //All students with program + parent info, ADMIN
-app.get('/admin/students', async (req, res) => {
+router.get('/students', async (req, res) => {
   const { data, error } = await supabase
     .from('students')
     .select('students, programs (), users ()') // Retrieve program, parent, and student information with a student id that matches request body
@@ -33,13 +31,13 @@ app.get('/admin/students', async (req, res) => {
 });
 
 //Create program, ADMIN
-app.post('/admin/programs', async (req, res) => {
+router.post('/programs', async (req, res) => {
   const { data, error } = await supabase
     .from('programs')
     .insert({
       'id': req.body.id,
       'name': req.body.name,
-      'level': req.body.email,
+      'level': req.body.level,
       'target_age': req.body.phone_number,
       'description': req.body.created_at,
       'prerequisites': req.body.prerequisites,
@@ -50,7 +48,7 @@ app.post('/admin/programs', async (req, res) => {
 });
 
 //Program detail with slot counts ADMIN
-app.get('/admin/programs/:id', async (req, res) => {
+router.get('/programs/:id', async (req, res) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (data.user.role == 'parent') {
     const { data, error } = await supabase
@@ -63,7 +61,7 @@ app.get('/admin/programs/:id', async (req, res) => {
 });
 
 //Pending registrations queue, ADMIN
-app.get('/admin/registrations', async (req, res) => {
+router.get('/registrations', async (req, res) => {
   const { data, error } = await supabase
     .from('registrations')
     .select()
@@ -72,7 +70,7 @@ app.get('/admin/registrations', async (req, res) => {
 });
 
 //Approve or reject a registration, ADMIN
-app.patch('/admin/registrations/:id', async (req, res) => {
+router.patch('/registrations/:id', async (req, res) => {
   const { data, error } = await supabase
     .from('registrations')
     .update( {'status': req.body.status} )
@@ -81,7 +79,7 @@ app.patch('/admin/registrations/:id', async (req, res) => {
 });
 
 //Create time slot, ADMIN
-app.post('/admin/time-slots', async (req, res) => {
+router.post('/time-slots', async (req, res) => {
   const { data: { user } } = await supabase.auth.getUser();
   if (data.user.role == 'parent') {
     const { data, error } = await supabase
@@ -103,4 +101,4 @@ app.post('/admin/time-slots', async (req, res) => {
     }
 });
 
-module.exports = router; //Export routes
+export default router; //Export routes
