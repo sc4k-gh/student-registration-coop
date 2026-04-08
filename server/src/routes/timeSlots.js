@@ -1,12 +1,4 @@
-import 'dotenv/config';
-import express from 'express';
-import jsonwebtoken from 'jsonwebtoken';
-import { createClient } from "@supabase/supabase-js";
-const supabaseUrl = process.env.DATABASE_URL;
-const supabaseKey = process.env.SUPABASE_PUBLISHABLE_DEFAULT_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-const router = express.Router();
-
+import './config/SupabaseClient.js'
 //TBA: Restrictions on what information the user recieves
 //List available slots with capacity info WIP
 router.get('/?program_id=&mode=&location_id=', async (req, res) => {

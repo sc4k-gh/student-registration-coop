@@ -1,14 +1,8 @@
 import 'dotenv/config';
 import express from 'express';
-import jsonwebtoken from 'jsonwebtoken';
 const app = express();
 const port = 8000;
-import { createClient } from "@supabase/supabase-js";
-const supabaseUrl = process.env.DATABASE_URL;
-const supabaseKey = process.env.SUPABASE_PUBLISHABLE_DEFAULT_KEY;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-
+import './config/SupabaseClient.js'
 //Route definitions
 import programs from './routes/programs.js';
 import auth from './routes/auth.js';
