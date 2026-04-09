@@ -1,3 +1,5 @@
+// FIX: 'import' is ES Module syntax. Everything else in this project uses 'require' (CommonJS).
+// Mixing both styles causes Node.js to crash. Change this line to: require('dotenv/config')
 import 'dotenv/config';
 import express from 'express';
 const app = express();
@@ -21,6 +23,8 @@ app.use('/programs', programs)
 app.use('/auth', auth)
 app.use('/locations', locations)
 app.use('/admin', admin)
+// FIX: The architecture doc defines this endpoint as /time-slots (with a hyphen), not /timeSlots.
+// The mobile app will send requests to /time-slots and get a 404 because this doesn't match.
 app.use('/timeSlots', timeSlots)
 app.use('/registrations', registrations)
 

@@ -4,6 +4,9 @@ router.post('/teachers', async (req, res) => {
   const { data, error } = await supabase
     .from('teachers')
     .insert({
+      // FIX: 'id', 'created_at', and 'updated_at' should not come from the client.
+      // The database generates these automatically. Letting clients set 'id' can cause conflicts.
+      'id': req.body.id,
       'name': req.body.name,
       'email': req.body.email,
       'phone_number': req.body.phone_number,
@@ -12,16 +15,22 @@ router.post('/teachers', async (req, res) => {
   res.send(data);
 });
 
+// FIX: app.get — should be router.get
+// FIX: No error handling.
 //TBA: Parent info + fix programs
 //All students with program + parent info, ADMIN
 router.get('/students', async (req, res) => {
   const { data, error } = await supabase
     .from('students')
+    // FIX: This select query is not valid Supabase syntax. 'programs ()' and 'users ()' are not
+    // how you join related tables. Use the Supabase join format: '*, registrations(*, programs(*))'
     .select('students, programs (), users ()') // Retrieve program, parent, and student information with a student id that matches request body
   if (error) return res.status(500).json({ error: error.message })
   else res.send(data);
 });
 
+// FIX: app.post — should be router.post
+// FIX: No error handling.
 //Create program, ADMIN
 router.post('/programs', async (req, res) => {
   const { data, error } = await supabase
@@ -37,6 +46,8 @@ router.post('/programs', async (req, res) => {
   else res.send(data);
 });
 
+// FIX: app.get — should be router.get
+// FIX: No error handling.
 //Program detail with slot counts ADMIN
 router.get('/programs/:id', async (req, res) => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -54,6 +65,8 @@ router.get('/programs/:id', async (req, res) => {
   }
 });
 
+// FIX: app.get — should be router.get
+// FIX: No error handling. Also missing joins to return student and time slot details with each registration.
 //Pending registrations queue, ADMIN
 router.get('/registrations', async (req, res) => {
   const { data, error } = await supabase
@@ -79,6 +92,8 @@ router.patch('/registrations/:id', async (req, res) => {
   else res.send(data);
 });
 
+// FIX: app.post — should be router.post
+// FIX: No error handling.
 //Create time slot, ADMIN
 router.post('/time-slots', async (req, res) => {
   const { data: { user } } = await supabase.auth.getUser();
