@@ -1,4 +1,7 @@
-import './config/SupabaseClient.js'
+import { supabase } from '../config/supabase.js';
+import express from 'express';
+const router = express.Router();
+
 //TBA: Restrictions on what information the user recieves
 // FIX: Query string parameters (?program_id=&mode=&location_id=) are NOT part of the route path.
 // Express will try to match the literal string '/?program_id=&mode=&location_id=' as a URL pattern
@@ -16,6 +19,7 @@ router.get('/?program_id=&mode=&location_id=', async (req, res) => {
     // Also missing filters for 'mode' and 'location_id' from the query string.
     // Also missing a capacity filter — full slots (current_count >= max_capacity) should not be returned.
     .eq('program_id', req.params.id); // Retrieve programs and timeslots matching given ID
-  res.send(data);
+  if (error) {return res.status(500).json({ error: error.message })}
+  else {res.send(data)};
 });
 export default router; //Export routes

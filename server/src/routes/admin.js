@@ -1,36 +1,43 @@
-import './config/SupabaseClient.js'
+import { supabase } from '../config/supabase.js';
+import express from 'express';
+const router = express.Router();
+
+
+// HEAVY WIP, needs to be changed heavily and go through several different other tables to work properly
+//Students under a specific teacher, by day, with contact details
+router.get('/teachers/:id/students', async (req, res) => {
+  const { data, error } = await supabase
+    .from('students')
+    .select('*, teachers (*)')
+    .eq('id', req.params.id);
+  if (error) {return res.status(500).json({ error: error.message })}
+  else {res.send(data)};
+});
+
 //Add teacher, ADMIN
 router.post('/teachers', async (req, res) => {
   const { data, error } = await supabase
     .from('teachers')
     .insert({
-      // FIX: 'id', 'created_at', and 'updated_at' should not come from the client.
-      // The database generates these automatically. Letting clients set 'id' can cause conflicts.
-      'id': req.body.id,
       'name': req.body.name,
       'email': req.body.email,
-      'phone_number': req.body.phone_number,
-      'created_at': req.body.created_at,
-      'updated_at': req.body.updated_at});
-  res.send(data);
+      'phone_number': req.body.phone_number});
+  if (error) {return res.status(500).json({ error: error.message })}
+  else {res.send(data)};
 });
 
-// FIX: app.get — should be router.get
-// FIX: No error handling.
 //TBA: Parent info + fix programs
 //All students with program + parent info, ADMIN
 router.get('/students', async (req, res) => {
   const { data, error } = await supabase
     .from('students')
-    // FIX: This select query is not valid Supabase syntax. 'programs ()' and 'users ()' are not
-    // how you join related tables. Use the Supabase join format: '*, registrations(*, programs(*))'
-    .select('students, programs (), users ()') // Retrieve program, parent, and student information with a student id that matches request body
-  if (error) return res.status(500).json({ error: error.message })
-  else res.send(data);
+    .select('*, programs (*, users (*)') // Retrieve program, parent, and student information with a student id that matches request body
+    // FIX: .eq needs to be changed so that it checks for student id only and goes from there
+    .eq('id', req.params.id);
+  if (error) {return res.status(500).json({ error: error.message })}
+  else {res.send(data)};
 });
 
-// FIX: app.post — should be router.post
-// FIX: No error handling.
 //Create program, ADMIN
 router.post('/programs', async (req, res) => {
   const { data, error } = await supabase
@@ -42,12 +49,11 @@ router.post('/programs', async (req, res) => {
       'description': req.body.description,
       'prerequisites': req.body.prerequisites,
       'status': req.body.status});
-  if (error) return res.status(500).json({ error: error.message })
-  else res.send(data);
+  if (error) {return res.status(500).json({ error: error.message })}
+  else {res.send(data)};
 });
 
-// FIX: app.get — should be router.get
-// FIX: No error handling.
+
 //Program detail with slot counts ADMIN
 router.get('/programs/:id', async (req, res) => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -56,25 +62,21 @@ router.get('/programs/:id', async (req, res) => {
       .from('programs')
       .select()
       .eq('id', req.params.id); // Retrieve program information with an id that matches request body
-    // FIX: 'max_capacity' and 'current_count' are not variables in this scope.
-    // They exist inside each row of the query result (e.g., data[0].max_capacity).
-    // This line will throw "ReferenceError: max_capacity is not defined".
     data.slotcount = (data.max_capacity - data.current_count) // Set slotcount property to the max capacity of the program - current registrations
-    if (error) return res.status(500).json({ error: error.message })
-    else res.send(data);
+    if (error) {return res.status(500).json({ error: error.message })}
+    else {res.send(data)};
   }
 });
 
-// FIX: app.get — should be router.get
-// FIX: No error handling. Also missing joins to return student and time slot details with each registration.
+// FIX: Missing joins to return student and time slot details with each registration.
 //Pending registrations queue, ADMIN
 router.get('/registrations', async (req, res) => {
   const { data, error } = await supabase
     .from('registrations')
     .select()
     .eq('status', 'pending'); // Retrieve all registrations still marked pending
-  if (error) return res.status(500).json({ error: error.message })
-  else res.send(data);
+  if (error) {return res.status(500).json({ error: error.message })}
+  else {res.send(data)};
 });
 
 // FIX: When a registration is rejected, current_count on time_slots should be decremented.
@@ -88,12 +90,11 @@ router.patch('/registrations/:id', async (req, res) => {
       'status': req.body.status,
     } )
     .eq('id', req.params.id); // Patch a registration matching the given ID
-  if (error) return res.status(500).json({ error: error.message })
-  else res.send(data);
+  if (error) {return res.status(500).json({ error: error.message })}
+  else {res.send(data)};
 });
 
-// FIX: app.post — should be router.post
-// FIX: No error handling.
+
 //Create time slot, ADMIN
 router.post('/time-slots', async (req, res) => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -109,8 +110,8 @@ router.post('/time-slots', async (req, res) => {
         'start_time': req.body.start_time,
         'end_time': req.body.end_time,
         'max_capacity': req.body.max_capacity,});
-      if (error) return res.status(500).json({ error: error.message })
-      else res.send(data);
+      if (error) {return res.status(500).json({ error: error.message })}
+      else {res.send(data)};
     }
 });
 
