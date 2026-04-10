@@ -3,7 +3,8 @@ import express from 'express';
 const router = express.Router();
 
 
-// HEAVY WIP, needs to be changed heavily and go through several different other tables to work properly
+// WIP, needs to be changed heavily and go through several different other tables to work properly
+//Should go: Time slots with teacher id  => Registrations with that time slot id  => Students with that time slot?
 //Students under a specific teacher, by day, with contact details
 router.get('/teachers/:id/students', async (req, res) => {
   const { data, error } = await supabase
@@ -68,7 +69,6 @@ router.get('/programs/:id', async (req, res) => {
   }
 });
 
-// FIX: Missing joins to return student and time slot details with each registration.
 //Pending registrations queue, ADMIN
 router.get('/registrations', async (req, res) => {
   const { data, error } = await supabase
@@ -79,19 +79,28 @@ router.get('/registrations', async (req, res) => {
   else {res.send(data)};
 });
 
-// FIX: When a registration is rejected, current_count on time_slots should be decremented.
-// This endpoint only updates the status but never adjusts the slot count, which will leave
-// the slot showing as more full than it actually is.
+//Still WIP
 //Approve or reject a registration, ADMIN
 router.patch('/registrations/:id', async (req, res) => {
-  const { data, error } = await supabase
+  if (req.query.status == 'rejected') {const decrement = 1}
+  else {const decrement = 0};
+  const { data1, error1 } = await supabase
     .from('registrations')
     .update( {
-      'status': req.body.status,
+      'status': req.query.status,
+      //line where a value in a different table is decremented the decrement variable
     } )
     .eq('id', req.params.id); // Patch a registration matching the given ID
-  if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)};
+    if (error1) {return res.status(500).json({ error1: error1.message })}
+  const { data2, error2 } = await supabase
+    .from('time_slots')
+    .update( {
+      'current_count': ('current_count' - 'decrement')
+      //line where a value in a different table is decremented the decrement variable
+    } )
+    .eq('id', req.params.id); // Patch a registration matching the given ID
+  if (error2) {return res.status(500).json({ error2: error2.message })}
+  else {res.send(data1)};
 });
 
 

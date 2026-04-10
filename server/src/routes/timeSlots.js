@@ -2,24 +2,18 @@ import { supabase } from '../config/supabase.js';
 import express from 'express';
 const router = express.Router();
 
-//TBA: Restrictions on what information the user recieves
-// FIX: Query string parameters (?program_id=&mode=&location_id=) are NOT part of the route path.
-// Express will try to match the literal string '/?program_id=&mode=&location_id=' as a URL pattern
-// and it will never match any real request. The route path should just be '/'.
-// Read the filters using req.query instead: req.query.program_id, req.query.mode, req.query.location_id
-//List available slots with capacity info WIP
-router.get('/?program_id=&mode=&location_id=', async (req, res) => {
+
+//List available slots with capacity info
+router.get('/', async (req, res) => {
   const { data, error } = await supabase
-    // FIX: The database table is named 'time_slots' (with an underscore), not 'time-slots' (with a hyphen).
-    // Supabase will return an error saying the table doesn't exist.
-    .from('time-slots')
+    .from('time_slots')
     .select()
-    // FIX: There is no ':id' parameter in this route, so req.params.id will always be undefined.
-    // The filter should use req.query.program_id (from the query string), not req.params.id.
-    // Also missing filters for 'mode' and 'location_id' from the query string.
-    // Also missing a capacity filter — full slots (current_count >= max_capacity) should not be returned.
-    .eq('program_id', req.params.id); // Retrieve programs and timeslots matching given ID
+    .eq('program_id', req.query.program_id) //Filter to slots matching supplied program
+    .eq('mode', req.query.mode) //Filter to slots using the supplied mode
+    .eq('location_id', req.query.location_id) //Filter to slots at the supplied location
+    .lt('current_count', 'max_capacity'); //Filter to slots under capacity
   if (error) {return res.status(500).json({ error: error.message })}
   else {res.send(data)};
 });
+
 export default router; //Export routes

@@ -26,4 +26,5 @@ app.use('/registrations', registrations);
 //Listen on port 8000
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
+  if (error) {return res.status(500).json({ error: error.message })}
 });

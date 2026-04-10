@@ -7,7 +7,7 @@ const router = express.Router();
 router.post('/signup', async (req, res) => {
   const { data, error } = await supabase.auth.signUp({
     email: req.body.email,
-    password: req.body.password, // !! WIP !!
+    password: req.body.password,
     options: {
       data: {
         name: req.body.name,
