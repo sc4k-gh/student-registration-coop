@@ -26,5 +26,7 @@ app.use('/registrations', registrations);
 //Listen on port 8000
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
-  if (error) {return res.status(500).json({ error: error.message })}
+  // Line 31 causes errors while running the backend:
+  // "error" is not defined in this file, nor is it ever used.
+  // if (error) {return res.status(500).json({ error: error.message });}
 });
