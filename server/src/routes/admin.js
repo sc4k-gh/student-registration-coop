@@ -1,16 +1,14 @@
 import { supabase } from '../config/supabase.js';
 import express from 'express';
 const router = express.Router();
-
-
-// WIP, needs to be changed heavily and go through several different other tables to work properly
-//Should go: Time slots with teacher id  => Registrations with that time slot id  => Students with that time slot?
+//Should be fully functional now
 //Students under a specific teacher, by day, with contact details
 router.get('/teachers/:id/students', async (req, res) => {
   const { data, error } = await supabase
-    .from('students')
-    .select('*, teachers (*)')
-    .eq('id', req.params.id);
+    .from('time_slots')
+    .select('id, teacher_id, registrations (student_id, students (*))')
+    .eq('teacher_id', req.params.id)
+    .order('id', { ascending: false });
   if (error) {return res.status(500).json({ error: error.message })}
   else {res.send(data)};
 });
@@ -20,21 +18,18 @@ router.post('/teachers', async (req, res) => {
   const { data, error } = await supabase
     .from('teachers')
     .insert({
-      'name': req.body.name,
-      'email': req.body.email,
-      'phone_number': req.body.phone_number});
+      'name': req.query.name,
+      'email': req.query.email,
+      'phone_number': req.query.phone_number});
   if (error) {return res.status(500).json({ error: error.message })}
   else {res.send(data)};
 });
 
-//TBA: Parent info + fix programs
 //All students with program + parent info, ADMIN
 router.get('/students', async (req, res) => {
   const { data, error } = await supabase
     .from('students')
-    .select('*, programs (*, users (*)') // Retrieve program, parent, and student information with a student id that matches request body
-    // FIX: .eq needs to be changed so that it checks for student id only and goes from there
-    .eq('id', req.params.id);
+    .select('*, programs (*, users (*))') // Retrieve program, parent, and student information with a student id that matches request body
   if (error) {return res.status(500).json({ error: error.message })}
   else {res.send(data)};
 });
@@ -57,8 +52,8 @@ router.post('/programs', async (req, res) => {
 
 //Program detail with slot counts ADMIN
 router.get('/programs/:id', async (req, res) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (data.user.role == 'admin') {
+  const { data: { user } } = await supabase.auth.getUser(); // Gets the current user details
+  if (user.role == 'admin') {
     const { data, error } = await supabase
       .from('programs')
       .select()
@@ -82,21 +77,20 @@ router.get('/registrations', async (req, res) => {
 //Still WIP
 //Approve or reject a registration, ADMIN
 router.patch('/registrations/:id', async (req, res) => {
-  if (req.query.status == 'rejected') {const decrement = 1}
-  else {const decrement = 0};
+  let decrement = 0
+  if (req.query.status == 'rejected') {decrement = 1}
+  else {decrement = -1};
   const { data1, error1 } = await supabase
     .from('registrations')
     .update( {
       'status': req.query.status,
-      //line where a value in a different table is decremented the decrement variable
     } )
-    .eq('id', req.params.id); // Patch a registration matching the given ID
+    .eq('time_slot_id', req.params.id); // Patch a registration matching the given ID
     if (error1) {return res.status(500).json({ error1: error1.message })}
   const { data2, error2 } = await supabase
     .from('time_slots')
     .update( {
       'current_count': ('current_count' - 'decrement')
-      //line where a value in a different table is decremented the decrement variable
     } )
     .eq('id', req.params.id); // Patch a registration matching the given ID
   if (error2) {return res.status(500).json({ error2: error2.message })}
@@ -106,8 +100,8 @@ router.patch('/registrations/:id', async (req, res) => {
 
 //Create time slot, ADMIN
 router.post('/time-slots', async (req, res) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (data.user.role == 'admin') {
+  const { data: { user } } = await supabase.auth.getUser(); // Gets the current user details
+  if (user.role == 'admin') {
     const { data, error } = await supabase
       .from('time_slots')
       .insert({
