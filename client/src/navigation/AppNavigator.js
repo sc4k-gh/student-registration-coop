@@ -8,6 +8,7 @@ import DashboardScreen from '../screens/dashboard_page';
 import StudentPage from '../screens/student_page';
 import TeachersPage from '../screens/teachers_page';
 import SettingsPage from '../screens/settings_page';
+import CoursesPage from '../screens/courses_page';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -18,6 +19,7 @@ function MainApp() {
             <Drawer.Screen name="Overview" component={DashboardScreen} />
             <Drawer.Screen name="Students" component={StudentPage} />
             <Drawer.Screen name="Teachers" component={TeachersPage} />
+            <Drawer.Screen name="Courses" component={CoursesPage} />
             <Drawer.Screen name="Settings" component={SettingsPage} />
         </Drawer.Navigator>
     );

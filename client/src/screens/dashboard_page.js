@@ -5,7 +5,7 @@ import apiClient from '../api/client.js';
 
 export default function DashboardScreen() {
   // Fetch students, teachers, and programs from the backend.
-  // NOTE: students and teachers are currently unavailable due to incomplete backend endpoints.
+  // Total Students and Total Teachers return 0 due to no test data.
   const { data: students, isLoading: studentsLoading } = useQuery({
     queryKey: ['students'],
     queryFn: () => apiClient.get('/admin/students'),
@@ -16,7 +16,7 @@ export default function DashboardScreen() {
     queryFn: () => apiClient.get('/admin/teachers'),
   });
 
-  const { data: programs, isLoading: programsLoading, isError: programsError } = useQuery({
+  const { data: programs, isLoading: programsLoading } = useQuery({
     queryKey: ['programs'],
     queryFn: () => apiClient.get('/programs'),
   });
@@ -31,20 +31,17 @@ export default function DashboardScreen() {
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Total Students</Text>
-          {/* TODO: Blocked — /admin/students endpoint has a schema error. */}
-        <Text style={styles.cardValue}>-</Text>
+        <Text style={styles.cardValue}>{students?.length ?? '-'}</Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Total Teachers</Text>
-        {/* TODO: Blocked — /admin/teachers endpoint is not yet implemented. */}
-        <Text style={styles.cardValue}>-</Text>
+        <Text style={styles.cardValue}>{teachers?.length ?? '-'}</Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Active Courses</Text>
-        {/* Filters programs by active status and returns the count. */}
-        <Text style={styles.cardValue}>{programs?.filter(p => p.status === 'active').length ?? '—'}</Text>
+        <Text style={styles.cardValue}>{programs?.filter(p => p.status === 'active').length ?? '-'}</Text>
       </View>
     </View>
   );

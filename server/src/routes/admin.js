@@ -29,7 +29,10 @@ router.post('/teachers', async (req, res) => {
 router.get('/students', async (req, res) => {
   const { data, error } = await supabase
     .from('students')
-    .select('*, programs (*, users (*))') // Retrieve program, parent, and student information with a student id that matches request body
+    // Fix on line 35: Previously .select('*, programs(*, users(*))')
+    // This code uses query path students -> programs -> users (which is incorrect).
+    // Correct path, as mentioned in architecture docs, is students -> registrations -> programs.
+    .select('*, registrations (*, programs (*))')
   if (error) {return res.status(500).json({ error: error.message })}
   else {res.send(data)};
 });
@@ -116,6 +119,16 @@ router.post('/time-slots', async (req, res) => {
       if (error) {return res.status(500).json({ error: error.message })}
       else {res.send(data)};
     }
+});
+
+//New endpoint: GET	/admin/teachers (missing from original code)
+//All teachers with their courses and time slots, ADMIN
+router.get('/teachers', async (req, res) => {
+  const { data, error } = await supabase
+    .from('teachers')
+    .select('*, time_slots (*, programs (*))')
+  if (error) {return res.status(500).json({ error: error.message })}
+  else {res.send(data)};
 });
 
 export default router; //Export routes
