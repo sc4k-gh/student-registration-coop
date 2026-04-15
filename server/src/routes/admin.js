@@ -1,7 +1,7 @@
 import { supabase } from '../config/supabase.js';
 import express from 'express';
 const router = express.Router();
-//Should be fully functional now
+
 //Students under a specific teacher, by day, with contact details
 router.get('/teachers/:id/students', async (req, res) => {
   const { data, error } = await supabase
@@ -29,10 +29,7 @@ router.post('/teachers', async (req, res) => {
 router.get('/students', async (req, res) => {
   const { data, error } = await supabase
     .from('students')
-    // Fix on line 35: Previously .select('*, programs(*, users(*))')
-    // This code uses query path students -> programs -> users (which is incorrect).
-    // Correct path, as mentioned in architecture docs, is students -> registrations -> programs.
-    .select('*, registrations (*, programs (*))')
+    .select('*, registrations (*, programs (*))') // Retrieve program, parent, and student information with a student id that matches request body
   if (error) {return res.status(500).json({ error: error.message })}
   else {res.send(data)};
 });
@@ -51,7 +48,6 @@ router.post('/programs', async (req, res) => {
   if (error) {return res.status(500).json({ error: error.message })}
   else {res.send(data)};
 });
-
 
 //Program detail with slot counts ADMIN
 router.get('/programs/:id', async (req, res) => {
@@ -77,29 +73,15 @@ router.get('/registrations', async (req, res) => {
   else {res.send(data)};
 });
 
-//Still WIP
 //Approve or reject a registration, ADMIN
-router.patch('/registrations/:id', async (req, res) => {
-  let decrement = 0
-  if (req.query.status == 'rejected') {decrement = 1}
-  else {decrement = -1};
-  const { data1, error1 } = await supabase
+router.post('/registrations/:id', async (req, res) => {
+  const { data, error } = await supabase
     .from('registrations')
-    .update( {
-      'status': req.query.status,
-    } )
-    .eq('time_slot_id', req.params.id); // Patch a registration matching the given ID
-    if (error1) {return res.status(500).json({ error1: error1.message })}
-  const { data2, error2 } = await supabase
-    .from('time_slots')
-    .update( {
-      'current_count': ('current_count' - 'decrement')
-    } )
-    .eq('id', req.params.id); // Patch a registration matching the given ID
-  if (error2) {return res.status(500).json({ error2: error2.message })}
-  else {res.send(data1)};
+    .update({'status': req.query.status})
+    .eq('id', req.params.id); // Patch a registration status matching the given ID
+  if (error) {return res.status(500).json({ error: error.message })}
+  else {res.send(data)}; // Code to change the time slot count isn't needed, Supabase function decrement_slot_count handles it automatically without needing input
 });
-
 
 //Create time slot, ADMIN
 router.post('/time-slots', async (req, res) => {
@@ -121,7 +103,6 @@ router.post('/time-slots', async (req, res) => {
     }
 });
 
-//New endpoint: GET	/admin/teachers (missing from original code)
 //All teachers with their courses and time slots, ADMIN
 router.get('/teachers', async (req, res) => {
   const { data, error } = await supabase

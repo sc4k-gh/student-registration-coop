@@ -9,6 +9,7 @@
     "dev": "nodemon src/index.js"
   },
   "dependencies": {
+    "@clerk/clerk-js": "^6.7.1",
     "@supabase/supabase-js": "^2.99.3",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",

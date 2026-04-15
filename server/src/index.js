@@ -11,9 +11,12 @@ import admin from './routes/admin.js';
 import timeSlots from './routes/timeSlots.js';
 import registrations from './routes/registrations.js';
 
-//ENDPOINTS TO BE ADDED
-// /auth/login
+// ENDPOINTS TO BE ADDED
 // /auth/setup-password
+
+// TODO
+// Finish /auth/setup-password
+// Finish Clerk implementation
 
 //Routes
 app.use('/programs', programs);
@@ -26,7 +29,4 @@ app.use('/registrations', registrations);
 //Listen on port 8000
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
-  // Line 31 causes errors while running the backend:
-  // "error" is not defined in this file, nor is it ever used.
-  // if (error) {return res.status(500).json({ error: error.message });}
 });
