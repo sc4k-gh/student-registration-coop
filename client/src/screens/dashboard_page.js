@@ -5,7 +5,6 @@ import apiClient from '../api/client.js';
 
 export default function DashboardScreen() {
   // Fetch students, teachers, and programs from the backend.
-  // Total Students and Total Teachers return 0 due to no test data.
   const { data: students, isLoading: studentsLoading } = useQuery({
     queryKey: ['students'],
     queryFn: () => apiClient.get('/admin/students'),

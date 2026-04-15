@@ -1,53 +1,45 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-const { createClient } = require("@supabase/supabase-js");
-const supabaseUrl = 'https://tezxtqtabsfxdavbmgpp.supabase.co';
-const supabaseKey = 'sb_publishable_np5n2nhgYZGBDxq_QZdoUg_p8Ck5NRT';
-const supabase = createClient(supabaseUrl, supabaseKey);
-let userInfo = []
-let formInfo = []
-async function queryID() {
-    return(supabase.from('users').select('*'))
-}
-  function handleSubmit(e) {
-    e.preventDefault();
-    userInfo = queryID();
-    formInfo = [id.value, password_hash.value, email.value, name.value, phone_number.value, role.value];
-    console.log(formInfo);
-    console.log((formInfo.email == userInfo.email));
-    console.log(userInfo);
-}
+import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { useQuery } from '@tanstack/react-query';
+import apiClient from '../api/client.js';
 
 export default function TeachersPage() {
+    // Fetch all teachers, with their name, courses, age, and time slots, from the backend.
+    const { data, isLoading, isError } = useQuery({
+        queryKey: ['teachers'],
+        queryFn: () => apiClient.get('/admin/teachers'),
+    });
+
+    if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
+    if (isError) return <View style={styles.container}><Text>Error loading teachers.</Text></View>;
+
     return (
         <View style={styles.container}>
-            <form id='formTest' onSubmit={handleSubmit}>
-                <div>
-                    <label>ID: </label>
-                    <input type="integer" id="id" required></input>
-                    <label>Email: </label>
-                    <input type="text" id="email" required></input>
-                    <label>Password hash: </label>
-                    <input type="text" id="password_hash" required></input>
-                    <label>Full name: </label>
-                    <input type="text" id="name" required></input>
-                    <label>Phone number: </label>
-                    <input type="text" id="phone_number" required></input>
-                    <label>Creation date: </label>
-                    <input type="text" id="role" required></input>
-                    <input type="submit" id="Submit"></input>
-                </div>
-            </form>
-            <h1>Example Entry:</h1>
-            <div>
-            <h1>ID: 4985daba-cb7b-49fb-a21f-9eb60c5c9f13</h1>
-            <h1>Email: testEmail@testing.ca</h1>
-            <h1>Full name: John Doe</h1>
-            <h1>Password hash: testpassword</h1>
-            <h1>Phone number: 1-111-111-1111</h1>
-            <h1>Creation date: 2026-03-23 14:59:44.80399</h1>
-            <h1>Role: parent</h1>
-            </div>
+            <Text style={styles.header}>Teachers</Text>
+            <FlatList
+                data={data}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => {
+                    const programs = item.time_slots
+                        ?.map(slot => slot.programs?.name)
+                        .filter(Boolean)
+                        .join(', ');
+
+                    const timeSlots = item.time_slots
+                        ?.map(slot => `${slot.day_of_week} ${slot.start_time}-${slot.end_time}`)
+                        .join(', ');
+                    
+                    return (
+                        <View style={styles.card}>
+                            <Text style={styles.name}>{item.name}</Text>
+                            <Text>Email: {item.email}</Text>
+                            <Text>Phone: {item.phone_number}</Text>
+                            <Text>Courses: {programs || 'No courses assigned'}</Text>
+                            <Text>Time Slots: {timeSlots || 'No time slots assigned'}</Text>
+                        </View>
+                    );
+                }}
+            />
         </View>
     );
 };
@@ -55,11 +47,29 @@ export default function TeachersPage() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        padding: 20,
+        backgroundColor: '#f5f5f5',
     },
-    text: {
-        fontSize: 20,
+    header: {
+        fontSize: 24,
         fontWeight: 'bold',
+        marginBottom: 20,
+        marginTop: 20,
+    },
+    card: {
+        backgroundColor: 'white',
+        padding: 15,
+        borderRadius: 10,
+        marginBottom: 10,
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
+    name: {
+        fontSize: 16,
+        fontWeight: 'bold',
+        marginBottom: 5,
     },
 });

@@ -5,7 +5,9 @@ import jsonwebtoken from 'jsonwebtoken';
 const router = express.Router();
 
 //Login (returns JWT)
-app.post('/login', (req, res) => {
+// FIX: Changed app.post to router.post — 'app' is not defined in this file.
+// All endpoints use router; not app.
+router.post('/login', (req, res) => {
     const user = {
         id: req.body.id,
         username: req.body.username,
