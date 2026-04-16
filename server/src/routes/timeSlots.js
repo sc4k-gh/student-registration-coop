@@ -13,7 +13,7 @@ router.get('/', async (req, res) => {
     .eq('location_id', req.query.location_id) //Filter to slots at the supplied location
     .lt('current_count', 'max_capacity'); //Filter to slots under capacity
   if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)};
+  else {res.json(data)};
 });
 
 export default router; //Export routes

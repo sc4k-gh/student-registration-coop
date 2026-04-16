@@ -10,19 +10,19 @@ router.get('/teachers/:id/students', async (req, res) => {
     .eq('teacher_id', req.params.id)
     .order('id', { ascending: false });
   if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)};
+  else {res.json(data)};
 });
 
 //Add teacher, ADMIN
-router.post('/teachers', async (req, res) => {
+router.post('/teachers/create', async (req, res) => {
   const { data, error } = await supabase
     .from('teachers')
     .insert({
-      'name': req.query.name,
-      'email': req.query.email,
-      'phone_number': req.query.phone_number});
+      'name': req.body.name,
+      'email': req.body.email,
+      'phone_number': req.body.phone_number});
   if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)};
+  else {res.json(data)};
 });
 
 //All students with program + parent info, ADMIN
@@ -31,7 +31,7 @@ router.get('/students', async (req, res) => {
     .from('students')
     .select('*, registrations (*, programs (*))') // Retrieve program, parent, and student information with a student id that matches request body
   if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)};
+  else {res.json(data)};
 });
 
 //Create program, ADMIN
@@ -46,21 +46,18 @@ router.post('/programs', async (req, res) => {
       'prerequisites': req.body.prerequisites,
       'status': req.body.status});
   if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)};
+  else {res.json(data)};
 });
 
 //Program detail with slot counts ADMIN
 router.get('/programs/:id', async (req, res) => {
-  const { data: { user } } = await supabase.auth.getUser(); // Gets the current user details
-  if (user.role == 'admin') {
-    const { data, error } = await supabase
-      .from('programs')
-      .select()
-      .eq('id', req.params.id); // Retrieve program information with an id that matches request body
-    data.slotcount = (data.max_capacity - data.current_count) // Set slotcount property to the max capacity of the program - current registrations
-    if (error) {return res.status(500).json({ error: error.message })}
-    else {res.send(data)};
-  }
+  const { data, error } = await supabase
+    .from('programs')
+    .select()
+    .eq('id', req.params.id); // Retrieve program information with an id that matches request body
+  data.slotcount = (data.max_capacity - data.current_count) // Set slotcount property to the max capacity of the program - current registrations
+  if (error) {return res.status(500).json({ error: error.message })}
+  else {res.json(data)};
 });
 
 //Pending registrations queue, ADMIN
@@ -70,17 +67,17 @@ router.get('/registrations', async (req, res) => {
     .select()
     .eq('status', 'pending'); // Retrieve all registrations still marked pending
   if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)};
+  else {res.json(data)};
 });
 
 //Approve or reject a registration, ADMIN
 router.post('/registrations/:id', async (req, res) => {
   const { data, error } = await supabase
     .from('registrations')
-    .update({'status': req.query.status})
+    .update({'status': req.body.status})
     .eq('id', req.params.id); // Patch a registration status matching the given ID
   if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)}; // Code to change the time slot count isn't needed, Supabase function decrement_slot_count handles it automatically without needing input
+  else {res.json(data)}; // Code to change the time slot count isn't needed, Supabase function decrement_slot_count handles it automatically without needing input
 });
 
 //Create time slot, ADMIN
@@ -99,8 +96,9 @@ router.post('/time-slots', async (req, res) => {
         'end_time': req.body.end_time,
         'max_capacity': req.body.max_capacity,});
       if (error) {return res.status(500).json({ error: error.message })}
-      else {res.send(data)};
+      else {return res.status(500).json({ error: error.message })};
     }
+  else {return }
 });
 
 //All teachers with their courses and time slots, ADMIN
@@ -109,7 +107,7 @@ router.get('/teachers', async (req, res) => {
     .from('teachers')
     .select('*, time_slots (*, programs (*))')
   if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)};
+  else {res.json(data)};
 });
 
 export default router; //Export routes

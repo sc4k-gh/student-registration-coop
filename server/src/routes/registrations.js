@@ -20,13 +20,14 @@ router.post('/', async (req, res) => {
     const { data, error } = await supabase
       .from('registrations')
       .insert({
-        'student_id': req.query.student_id,
-        'program_id': req.query.program_id,
-        'time_slot_id': req.query.time_slot_id,
+        'student_id': req.body.student_id,
+        'program_id': req.body.program_id,
+        'time_slot_id': req.body.time_slot_id,
       });    
     if (error) {return res.status(500).json({ error: error.message })}
-    else {res.send(data)};
+    else {res.json(data)};
   }
+  else {return 'Not a parent'}
 });
 
 export default router; //Export routes

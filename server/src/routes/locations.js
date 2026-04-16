@@ -9,7 +9,7 @@ router.get('/', async (req, res) => {
     .from('locations')
     .select();
   if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)};
+  else {res.json(data)};
 });
 
 export default router; //Export routes

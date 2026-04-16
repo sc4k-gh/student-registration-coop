@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 const app = express();
 const port = 8000;
+app.use(express.json())
 
 //Route definitions
 import programs from './routes/programs.js';
