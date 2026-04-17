@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 
 export default function CoursesPage() {
-    const { data: programs, isLoading, isError } = useQuery({
+    // Fetch programs time slot counts from the backend.
+    const { data, isLoading, isError } = useQuery({
         queryKey: ['programs'],
         queryFn: () => apiClient.get('/programs'),
     });
@@ -16,16 +17,27 @@ export default function CoursesPage() {
         <View style={styles.container}>
             <Text style={styles.header}>Courses</Text>
             <FlatList
-                data={programs}
+                data={data}
                 keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.card}>
-                        <Text style={styles.title}>{item.name}</Text>
-                        <Text>Level: {item.level}</Text>
-                        <Text>Age Range: {item.target_age}</Text>
-                        <Text>Status: {item.status}</Text>
-                    </View>
-                )}
+                renderItem={({ item }) => {
+                    const slotInfo = item.time_slots
+                        ?.map(slot => {
+                            const isFull = slot.current_count >= slot.max_capacity;
+                            return `${slot.current_count}/${slot.max_capacity}${isFull ? ' (full)' : ''}`;
+                        })
+                        .join(', ');
+
+                    return (
+                        <View style={styles.card}>
+                            <Text style={styles.title}>{item.name}</Text>
+                            <Text>Level: {item.level}</Text>
+                            <Text>Age Range: {item.target_age}</Text>
+                            <Text>Status: {item.status}</Text>
+                            <Text>Description: {item.description}</Text>
+                            <Text>Time Slots: {slotInfo || 'No slots assigned'}</Text>
+                        </View>
+                    );
+                }}
             />
         </View>
     );
