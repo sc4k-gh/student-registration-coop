@@ -3,20 +3,22 @@ import express from 'express';
 const router = express.Router();
 
 
-//View own registrations + status
+//View own registrations + status PARENT
 router.get('/my', async (req, res) => {
-  const { data, error } = await supabase
-    .from('registrations')
-    .select()
-    .eq('student_id', req.query.student_id); // Retrieve registration information with a student id that matches request body
-  if (error) {return res.status(500).json({ error: error.message })}
-  else {res.send(data)};
+  const auth = getAuth(req)
+  if (!auth.has({ permission: 'sc4k:parent' })) {return res.status(403).send('Forbidden')} // Check for admin permissions in Clerk, error if not admin
+    const { data, error } = await supabase
+      .from('registrations')
+      .select()
+      .eq('student_id', req.query.student_id); // Retrieve registration information with a student id that matches request body
+    if (error) {return res.status(500).json({ error: error.message })}
+    else {res.json(data)};
 });
 
 //Submit a registration, PARENT
 router.post('/', async (req, res) => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user.role == 'parent') {
+  const auth = getAuth(req)
+  if (!auth.has({ permission: 'sc4k:parent' })) {return res.status(403).send('Forbidden')} // Check for admin permissions in Clerk, error if not admin
     const { data, error } = await supabase
       .from('registrations')
       .insert({
@@ -26,8 +28,6 @@ router.post('/', async (req, res) => {
       });    
     if (error) {return res.status(500).json({ error: error.message })}
     else {res.json(data)};
-  }
-  else {return 'Not a parent'}
 });
 
 export default router; //Export routes
