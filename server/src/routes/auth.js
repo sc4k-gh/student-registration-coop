@@ -2,14 +2,15 @@ import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/expre
 import { supabase } from '../config/supabase.js';
 import express from 'express';
 import jsonwebtoken from 'jsonwebtoken';
+import hasPermission from './registrations.js'
 const router = express.Router();
 
 //Login (returns JWT)
 router.post('/login', (req, res) => {
   const user = {
     id: req.body.id,
-    username: req.body.username,
-    email: req.body.email
+    email: req.body.email,
+    name: req.body.name,
     };
     jsonwebtoken.sign({ user }, process.env.CLERK_SECRET_KEY, { expiresIn: '24h' }, (err, token) => {
       if (err) {return res.status(500).json({ error: error.message })}
@@ -18,9 +19,7 @@ router.post('/login', (req, res) => {
 });
 
 //Admin sets password on first login (email must be pre-seeded)
-router.post('/setup-password', (req, res) => {
-  const auth = getAuth(req)
-  if (!auth.has({ permission: 'sc4k:admin' })) {return res.status(403).send('Forbidden')} // Check for admin permissions in Clerk, error if not admin
+router.post('/setup-password', requireAuth(), hasPermission, (req, res) => {
     const user = {
         id: req.body.id,
         username: req.body.username,

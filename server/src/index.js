@@ -1,4 +1,5 @@
 import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express'
+import { supabase } from '../config/supabase.js';
 import 'dotenv/config';
 import express from 'express';
 const app = express();
