@@ -10,10 +10,17 @@ export default function LandingPage() {
             <Text>Student App</Text>
             <Text>Thank you for using the student registration app</Text>
 
-            <Button
-                title="Go to Dashboard"
-                onPress={() => navigation.navigate("Dashboard")}
-            />
+            <View style={{ flexDirection: 'column', margin: 20, gap: 20 }}>   
+                <Button
+                    title="Go to Dashboard"
+                    onPress={() => navigation.navigate("Dashboard")}
+                />
+
+                <Button
+                    title="Register a Student"
+                    onPress={() => navigation.navigate("Registration")}
+                />
+            </View>
         </View>
     );
 }
