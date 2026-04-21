@@ -3,17 +3,12 @@ import { supabase } from '../config/supabase.js';
 import express from 'express';
 const router = express.Router();
 
-// Use `getAuth()` to protect a route based on authorization status
-const hasPermission = (req, res, next) => {
+//Students under a specific teacher, by day, with contact details ADMIN
+router.get('/teachers/:id/students', async (req, res) => {
   const auth = getAuth(req)
-  if (!auth.has({ permission: 'sc4k:parent' })) { 
+  if (!auth.has({ permission: 'sc4k:admin' })) { 
     return res.status(403).send('Forbidden') // Handle if the user is not authorized
   }
-  return next()
-}
-
-//Students under a specific teacher, by day, with contact details ADMIN
-router.get('/teachers/:id/students', requireAuth(), hasPermission, async (req, res) => {
     const { data, error } = await supabase
       .from('time_slots')
       .select('id, teacher_id, registrations (student_id, students (*))') // Show students with all related 
@@ -24,7 +19,11 @@ router.get('/teachers/:id/students', requireAuth(), hasPermission, async (req, r
 });
 
 //Add teacher, ADMIN
-router.post('/teachers/create', requireAuth(), hasPermission, async (req, res) => {
+router.post('/teachers/create', async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth.has({ permission: 'sc4k:admin' })) { 
+    return res.status(403).send('Forbidden') // Handle if the user is not authorized
+  }
     const { data, error } = await supabase
       .from('teachers')
       .insert({
@@ -37,7 +36,11 @@ router.post('/teachers/create', requireAuth(), hasPermission, async (req, res) =
 });
 
 //All students with program + parent info, ADMIN
-router.get('/students', requireAuth(), hasPermission, async (req, res) => {
+router.get('/students', async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth.has({ permission: 'sc4k:admin' })) { 
+    return res.status(403).send('Forbidden') // Handle if the user is not authorized
+  }
   const { data, error } = await supabase
     .from('students')
     .select('*, registrations (*, programs (*))') // Retrieve program, parent, and student information with a student id that matches request body
@@ -46,7 +49,11 @@ router.get('/students', requireAuth(), hasPermission, async (req, res) => {
 });
 
 //Create program, ADMIN
-router.post('/programs', requireAuth(), hasPermission, async (req, res) => {
+router.post('/programs', async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth.has({ permission: 'sc4k:admin' })) { 
+    return res.status(403).send('Forbidden') // Handle if the user is not authorized
+  }
     const { data, error } = await supabase
       .from('programs')
       .insert({
@@ -62,7 +69,11 @@ router.post('/programs', requireAuth(), hasPermission, async (req, res) => {
 });
 
 //Program detail with slot counts ADMIN
-router.get('/programs/:id', requireAuth(), hasPermission, async (req, res) => {
+router.get('/programs/:id', async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth.has({ permission: 'sc4k:admin' })) { 
+    return res.status(403).send('Forbidden') // Handle if the user is not authorized
+  }
     const { data, error } = await supabase
       .from('programs')
       .select()
@@ -73,7 +84,11 @@ router.get('/programs/:id', requireAuth(), hasPermission, async (req, res) => {
 });
 
 //Pending registrations queue, ADMIN
-router.get('/registrations', requireAuth(), hasPermission, async (req, res) => {
+router.get('/registrations', async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth.has({ permission: 'sc4k:admin' })) { 
+    return res.status(403).send('Forbidden') // Handle if the user is not authorized
+  }
     const { data, error } = await supabase
       .from('registrations')
       .select()
@@ -83,7 +98,11 @@ router.get('/registrations', requireAuth(), hasPermission, async (req, res) => {
 });
 
 //Approve or reject a registration, ADMIN
-router.post('/registrations/:id', requireAuth(), hasPermission, async (req, res) => {
+router.post('/registrations/:id', async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth.has({ permission: 'sc4k:admin' })) { 
+    return res.status(403).send('Forbidden') // Handle if the user is not authorized
+  }
     const { data, error } = await supabase
       .from('registrations')
       .update({'status': req.body.status})
@@ -93,7 +112,11 @@ router.post('/registrations/:id', requireAuth(), hasPermission, async (req, res)
 });
 
 //Create time slot, ADMIN
-router.post('/time-slots', requireAuth(), hasPermission, async (req, res) => {
+router.post('/time-slots', async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth.has({ permission: 'sc4k:admin' })) { 
+    return res.status(403).send('Forbidden') // Handle if the user is not authorized
+  }
     const { data, error } = await supabase
       .from('time_slots')
       .insert({
@@ -110,7 +133,11 @@ router.post('/time-slots', requireAuth(), hasPermission, async (req, res) => {
 });
 
 //All teachers with their courses and time slots, ADMIN
-router.get('/teachers', requireAuth(), hasPermission, async (req, res) => {
+router.get('/teachers', async (req, res) => {
+  const auth = getAuth(req)
+  if (!auth.has({ permission: 'sc4k:admin' })) { 
+    return res.status(403).send('Forbidden') // Handle if the user is not authorized
+  };
     const { data, error } = await supabase
       .from('teachers')
       .select('*, time_slots (*, programs (*))')

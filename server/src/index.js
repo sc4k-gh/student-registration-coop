@@ -27,7 +27,7 @@ app.use('/admin', admin);
 app.use('/time-slots', timeSlots);
 app.use('/registrations', registrations);
 
-//Listen on port 8081
+//Listen on port 8000
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });

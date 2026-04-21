@@ -2,7 +2,6 @@ import { supabase } from '../config/supabase.js';
 import express from 'express';
 const router = express.Router();
 
-
 //List all locations, ANY
 router.get('/', async (req, res) => {
   const { data, error } = await supabase

@@ -2,7 +2,6 @@ import { supabase } from '../config/supabase.js';
 import express from 'express';
 const router = express.Router();
 
-
 //List available slots with capacity info
 router.get('/', async (req, res) => {
   const { data, error } = await supabase
