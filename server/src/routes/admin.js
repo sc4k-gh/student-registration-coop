@@ -6,7 +6,10 @@ const router = express.Router();
 // Use `getAuth()` to protect a route based on authorization status
 const hasPermission = (req, res, next) => {
   const auth = getAuth(req)
-  if (!auth.has({ permission: 'sc4k:parent' })) { 
+  // FIX ON LINE 12: previously if (!auth.has({ permission: 'sc4k:parent' }))
+  // Using wrong permission; sc4k:parent instead of sc4k:admin.
+  // This code makes admin endpoints accessible by parents, not admins.
+  if (!auth.has({ permission: 'sc4k:admin' })) { 
     return res.status(403).send('Forbidden') // Handle if the user is not authorized
   }
   return next()
@@ -106,7 +109,10 @@ router.post('/time-slots', requireAuth(), hasPermission, async (req, res) => {
         'end_time': req.body.end_time,
         'max_capacity': req.body.max_capacity,});
       if (error) {return res.status(500).json({ error: error.message })}
-      else {return res.status(500).json({ error: error.message })};
+      // FIX ON LINE 115: previously else {return res.status(500).json({ error: error.message })};
+      // This code returns an error (even if the post process succeeds without one).
+      // As a result, it always "fails" even when it shouldn't.
+      else {res.json(data)};
 });
 
 //All teachers with their courses and time slots, ADMIN

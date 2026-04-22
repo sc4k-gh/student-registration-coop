@@ -43,7 +43,17 @@ export default function RegistrationForm() {
                     mode: selectedMode,
                     ...(selectedMode === 'in-person' && { location_id: selectedLocation })
                 });
-                return apiClient.get(`/time-slots?${params}`);
+                const result = apiClient.get(`/time-slots?${params}`);
+                console.log('Raw API response:', result);  // Add this                                                                           
+                console.log('Is array?', Array.isArray(result));  // Add this
+                
+                console.log('Full URL:', `/time-slots?${params}`);                                                                                   
+                console.log('Params:', {                                                                                                             
+                    program_id: selectedProgram,                                                                                                     
+                    mode: selectedMode,                                                                                                              
+                    location_id: selectedLocation                                                                                                    
+                });  
+                return result; 
         },
         // Fetching for time slots is enabled only when we already have program and mode.
         enabled: !!selectedProgram && !!selectedMode,

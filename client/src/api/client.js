@@ -2,7 +2,7 @@
 // TODO: Replace with the real Render URL once the backend is deployed.
 // Currently set to a local IP address for testing purposes.
 // const BASE_URL = 'http://[IP_ADDRESS]:8000';
-const BASE_URL = 'http://[IP_ADDRESS]:8000';
+const BASE_URL = 'http://192.168.2.24:8000';
 
 const apiClient = {
   // Sends a GET request to the given endpoint.

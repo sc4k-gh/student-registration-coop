@@ -1,6 +1,8 @@
+import 'dotenv/config'; // MINOR FIX: import dotenv first, in case other code/imports require .env variables.
 import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express'
-import { supabase } from '../config/supabase.js';
-import 'dotenv/config';
+// PATH FIX IN SUPABASE IMPORT: previously import { supabase } from '../config/supabase.js';
+// Previous code imported supabase from the wrong location; should be './config/supabase.js'.
+import { supabase } from './config/supabase.js';
 import express from 'express';
 const app = express();
 /* Note: Port 8081 is used by Expo's Metro bundler by default.
@@ -27,7 +29,7 @@ app.use('/admin', admin);
 app.use('/time-slots', timeSlots);
 app.use('/registrations', registrations);
 
-//Listen on port 8081
+//Listen on port 8000
 app.listen(port, () => {
   console.log(`Listening on port ${port}`);
 });
