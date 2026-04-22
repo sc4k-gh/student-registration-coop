@@ -1,47 +1,45 @@
-import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express'
+import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express';
 import { supabase } from '../config/supabase.js';
 import express from 'express';
 import jsonwebtoken from 'jsonwebtoken';
-import hasPermission from './registrations.js'
 const router = express.Router();
 
+//WIP (needs to use email instead of userId or sessionId, requires a template)
 //Login (returns JWT)
-router.post('/login', (req, res) => {
-  const user = {
-    id: req.body.id,
-    email: req.body.email,
-    name: req.body.name,
-    };
-    jsonwebtoken.sign({ user }, process.env.CLERK_SECRET_KEY, { expiresIn: '24h' }, (err, token) => {
-      if (err) {return res.status(500).json({ error: error.message })}
-      else {res.json(data)};
-    });
+router.post('/login', async (req, res) => {
+  const userId = req.body.userId
+  const password = req.body.password
+  const verified = await clerkClient.users.verifyPassword({
+    userId,
+    password,
+  })
+  if (!verified) {return res.status(403).send('Forbidden')}; // Handle if the user provides an incorrect id or password
+  // Use the `getToken()` method to generate a token from a template, and send as json
+  const response = await clerkClient.sessions.getToken(sessionId, template); // Add template name after official Clerk is created
+  res.json({response});
 });
 
 //Admin sets password on first login (email must be pre-seeded)
-router.post('/setup-password', requireAuth(), hasPermission, (req, res) => {
-    const user = {
-        id: req.body.id,
-        username: req.body.username,
-        password: req.body.password
-    };
-    jsonwebtoken.sign({ user }, process.env.CLERK_SECRET_KEY, { expiresIn: '24h' }, (err, token) => {
-        if (err) {return res.status(500).json({ error: error.message })}
-        else {res.json(data)};
-    });
+router.post('/setup-password', async (req, res) => {
+  const auth = getAuth(req);
+  const sessionId = req.auth.sessionId;
+  if (!auth.has({permission: 'sc4k:admin'})) { 
+    return res.status(403).send('Forbidden')}; // Handle if the user is not authorized
+  //Update password of current session's user with request body
+  const params = {password:req.body.password};
+  const response = await clerkClient.users.updateUser(req.auth.userId, params);
+    if (err) {return res.status(500).json({ error: error.message })}
+      else {res.json(response)};
 });
 
+//May need to be changed depending on what parameters are set for user accounts through Clerk
 //Parent sign-up
 router.post('/signup', async (req, res) => {
-  const user = {
-    email: req.body.email,
-    password: req.body.password,
-    name: req.body.name,
-    role: 'parent',
-    phone_number: req.body.phone_number
-  }
-  if (error) {return res.status(500).json({ error: error.message })}
-  else {res.json(data)};
+  await clerkClient.users.createUser({
+    emailAddress: [req.body.emailAddress],
+    password: 'unsetpassword', // Set to placeholder until setup-password is used
+  });
+  res.status(200).json({success: true});
 });
 
 export default router; //Export routes
