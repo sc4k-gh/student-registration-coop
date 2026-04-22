@@ -1,55 +1,45 @@
-import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express'
+import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express';
 import { supabase } from '../config/supabase.js';
 import express from 'express';
 import jsonwebtoken from 'jsonwebtoken';
 const router = express.Router();
 
-//Missing a template, will not work properly currently
+//WIP (needs to use email instead of userId or sessionId, requires a template)
 //Login (returns JWT)
-router.post('/login', (req, res) => {
-  const auth = getAuth(req)
-  if (!auth.has({ permission: 'sc4k:admin' })) { 
-    return res.status(403).send('Forbidden') // Handle if the user is not authorized
-  }
-  const sessionId = req.auth.sessionId
-  // Protect the route from unauthenticated users
-  if (!sessionId) {
-    res.status(401).json({ error: 'Unauthorized' })
-    return
-  }
-  // Use the `getToken()` method to generate a token from a template
-  const token = await clerkClient.sessions.getToken(sessionId, template) // Add template name after official Clerk is created
-  res.json({ token })
+router.post('/login', async (req, res) => {
+  const userId = req.body.userId
+  const password = req.body.password
+  const verified = await clerkClient.users.verifyPassword({
+    userId,
+    password,
+  })
+  if (!verified) {return res.status(403).send('Forbidden')}; // Handle if the user provides an incorrect id or password
+  // Use the `getToken()` method to generate a token from a template, and send as json
+  const response = await clerkClient.sessions.getToken(sessionId, template); // Add template name after official Clerk is created
+  res.json({response});
 });
 
 //Admin sets password on first login (email must be pre-seeded)
-router.post('/setup-password', requireAuth(), hasPermission, (req, res) => {
-  const auth = getAuth(req)
-  if (!auth.has({ permission: 'sc4k:admin' })) { 
-    return res.status(403).send('Forbidden') // Handle if the user is not authorized
-  };
-  const user = {
-    id: req.body.id,
-    username: req.body.username,
-    password: req.body.password
-  };
-  jsonwebtoken.sign({ user }, process.env.CLERK_SECRET_KEY, { expiresIn: '24h' }, (err, token) => {
+router.post('/setup-password', async (req, res) => {
+  const auth = getAuth(req);
+  const sessionId = req.auth.sessionId;
+  if (!auth.has({permission: 'sc4k:admin'})) { 
+    return res.status(403).send('Forbidden')}; // Handle if the user is not authorized
+  //Update password of current session's user with request body
+  const params = {password:req.body.password};
+  const response = await clerkClient.users.updateUser(req.auth.userId, params);
     if (err) {return res.status(500).json({ error: error.message })}
-      else {res.json(data)};
-  });
+      else {res.json(response)};
 });
 
-//May need to be changed depending on what parameters are set for user accounts
+//May need to be changed depending on what parameters are set for user accounts through Clerk
 //Parent sign-up
 router.post('/signup', async (req, res) => {
   await clerkClient.users.createUser({
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
     emailAddress: [req.body.emailAddress],
-    password: req.body.password,
+    password: 'unsetpassword', // Set to placeholder until setup-password is used
   });
-  res.status(200).json({ success: true })
+  res.status(200).json({success: true});
 });
-
 
 export default router; //Export routes

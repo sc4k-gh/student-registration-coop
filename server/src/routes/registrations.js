@@ -1,10 +1,12 @@
-import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express'
+import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express';
 import { supabase } from '../config/supabase.js';
 import express from 'express';
 const router = express.Router();
 
-//View own registrations + status PARENT
-router.get('/my', requireAuth(), hasPermission, async (req, res) => {
+//Every endpoint in this file requires the user to be logged in as a parent, otherwise 403 is returned
+
+//View own registrations + status
+router.get('/my', async (req, res) => {
   const auth = getAuth(req)
   if (!auth.has({ permission: 'sc4k:parent' })) { 
     return res.status(403).send('Forbidden') // Handle if the user is not authorized
@@ -17,8 +19,8 @@ router.get('/my', requireAuth(), hasPermission, async (req, res) => {
     else {res.json(data)};
 });
 
-//Submit a registration, PARENT
-router.post('/', requireAuth(), hasPermission, async (req, res) => {
+//Submit a registration
+router.post('/', async (req, res) => {
   const auth = getAuth(req)
   if (!auth.has({ permission: 'sc4k:parent' })) { 
     return res.status(403).send('Forbidden') // Handle if the user is not authorized
