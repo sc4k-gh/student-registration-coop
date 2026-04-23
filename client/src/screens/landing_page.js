@@ -10,7 +10,12 @@ export default function LandingPage() {
             <Text>Student App</Text>
             <Text>Thank you for using the student registration app</Text>
 
-            <View style={{ flexDirection: 'column', margin: 20, gap: 20 }}>   
+            <View style={{ flexDirection: 'column', margin: 20, gap: 20 }}>
+                <Button
+                    title="Login"
+                    onPress={() => navigation.navigate("Login")}
+                />
+                   
                 <Button
                     title="Go to Dashboard"
                     onPress={() => navigation.navigate("Dashboard")}

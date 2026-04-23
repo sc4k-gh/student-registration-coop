@@ -10,6 +10,8 @@ import TeachersPage from '../screens/teachers_page';
 import SettingsPage from '../screens/settings_page';
 import CoursesPage from '../screens/courses_page';
 import RegistrationForm from '../screens/parent/registration_form';
+import LoginPage from '../screens/auth/login_page';
+import SignUpPage from '../screens/auth/signup_page';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -33,6 +35,8 @@ export default function AppNavigator() {
                 <Stack.Screen name="Landing" component={LandingPage} />
                 <Stack.Screen name="Dashboard" component={MainApp} />
                 <Stack.Screen name="Registration" component={RegistrationForm} />
+                <Stack.Screen name="Login" component={LoginPage} />
+                <Stack.Screen name="SignUp" component={SignUpPage} />
             </Stack.Navigator>
         </NavigationContainer>
     );
