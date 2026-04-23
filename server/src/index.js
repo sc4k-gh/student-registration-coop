@@ -3,7 +3,7 @@ import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/expre
 import { supabase } from './config/supabase.js';
 import express from 'express';
 const app = express();
-const port = 8000; // Old backend port; changed from 8081 to avoid conflicts with Expo.  
+const port = process.env.port;
 app.use(express.json());
 app.use(clerkMiddleware());
 

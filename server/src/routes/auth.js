@@ -1,10 +1,10 @@
-import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express';
+import { clerkMiddleware, clerkClient, getAuth} from '@clerk/express';
 import { supabase } from '../config/supabase.js';
 import express from 'express';
 import jsonwebtoken from 'jsonwebtoken';
 const router = express.Router();
 
-//WIP (needs to use email instead of userId or sessionId, requires a template)
+//WIP (requires a template)
 //Login (returns JWT)
 router.post('/login', async (req, res) => {
   const userId = req.body.userId

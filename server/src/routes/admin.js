@@ -93,17 +93,18 @@ router.get('/registrations', async (req, res) => {
     else {res.json(data)};
 });
 
-//Approve or reject a registration
-router.post('/registrations/:id', async (req, res) => {
+router.get('/programs/:id', async (req, res) => {
   const auth = getAuth(req);
   if (!auth.has({ permission: 'sc4k:admin' })) { 
     return res.status(403).send('Forbidden')}; // Handle if the user is not authorized
     const { data, error } = await supabase
-      .from('registrations')
-      .update({'status': req.body.status})
-      .eq('id', req.params.id); // Patch a registration status matching the given ID
+      .from('programs')
+      .select('*, time_slots (id, program_id, current_count, max_capacity')
+      .eq('program_id', req.params.id); // Results matching given program id
+    //Currently broken, has to sum up current_counts from every time slot with given program id and subtract from max_capacity for slot count
+    data.slotcount = data.max_capacity - data.current_count; // Set slotcount property of response to the max capacity of the program - current registrations
     if (error) {return res.status(500).json({ error: error.message })}
-    else {res.json(data)}; // Code to change the time slot count isn't needed, Supabase function decrement_slot_count handles it automatically without needing input
+    else {res.json(data)};
 });
 
 //Create time slot
