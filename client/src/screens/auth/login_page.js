@@ -35,7 +35,8 @@ export default function Page() {
         },
       })
     } else if (signIn.status === 'needs_second_factor') {
-      // See https://clerk.com/docs/guides/development/custom-flows/authentication/multi-factor-authentication
+      // Send verification code for multi-factor authentication (MFA)
+      await signIn.mfa.sendEmailCode()
     } else if (signIn.status === 'needs_client_trust') {
       // For other second factor strategies,
       // see https://clerk.com/docs/guides/development/custom-flows/authentication/client-trust
@@ -72,6 +73,35 @@ export default function Page() {
       // Check why the sign-in is not complete
       console.error('Sign-in attempt not complete:', signIn)
     }
+  }
+  if (signIn.status === 'needs_second_factor') {
+    return (
+      <View style={styles.container}>
+        <Text style={[styles.title, { fontSize: 24, fontWeight: 'bold' }]}>
+          Verify your account
+        </Text>
+        <TextInput
+          style={styles.input}
+          value={code}
+          placeholder="Enter your verification code"
+          placeholderTextColor="#666666"
+          onChangeText={(code) => setCode(code)}
+          keyboardType="numeric"
+        />
+        <Pressable
+          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+          onPress={handleVerify}
+        >
+          <Text style={styles.buttonText}>Verify</Text>
+        </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
+          onPress={() => signIn.reset()}
+        >
+          <Text style={styles.secondaryButtonText}>Start over</Text>
+        </Pressable>
+      </View>
+    )
   }
 
   if (signIn.status === 'needs_client_trust') {

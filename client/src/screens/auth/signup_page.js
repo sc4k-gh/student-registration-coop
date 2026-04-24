@@ -91,6 +91,12 @@ export default function Page() {
         >
           <Text style={styles.secondaryButtonText}>I need a new code</Text>
         </Pressable>
+        <Pressable
+          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
+          onPress={() => signUp.reset()}
+        >
+          <Text style={styles.secondaryButtonText}>Start over</Text>
+        </Pressable>
       </View>
     )
   }

@@ -1,8 +1,8 @@
 // Base URL for all API requests.
 // TODO: Replace with the real Render URL once the backend is deployed.
 // Currently set to a local IP address for testing purposes.
-// const BASE_URL = 'http://[IP_ADDRESS]:8000';
-const BASE_URL = 'http://[IP_ADDRESS]:8000';
+// EXPO_PUBLIC_API_URL=http://IP_ADDRESS:8000
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
 
 const apiClient = {
   // Sends a GET request to the given endpoint.
