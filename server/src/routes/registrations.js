@@ -3,14 +3,13 @@ import { supabase } from '../config/supabase.js';
 import express from 'express';
 const router = express.Router();
 
-//Every endpoint in this file requires the user to be logged in as a parent, otherwise 403 is returned
+//Every endpoint in this file requires the user to be authorized as a parent, otherwise 403 is returned
 
 //View own registrations + status
 router.get('/my', async (req, res) => {
   const auth = getAuth(req)
-  if (!auth.has({ permission: 'sc4k:parent' })) { 
-    return res.status(403).send('Forbidden') // Handle if the user is not authorized
-  };
+  if (!auth.has({permission: 'sc4k:parent'})) {
+    return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('registrations')
     .select()
@@ -22,9 +21,8 @@ router.get('/my', async (req, res) => {
 //Submit a registration
 router.post('/', async (req, res) => {
   const auth = getAuth(req)
-  if (!auth.has({ permission: 'sc4k:parent' })) { 
-    return res.status(403).send('Forbidden') // Handle if the user is not authorized
-  };
+  if (!auth.has({permission: 'sc4k:parent'})) {
+    return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('registrations')
     .insert({
