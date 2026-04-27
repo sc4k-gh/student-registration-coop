@@ -6,18 +6,20 @@ import 'dotenv/config';
 import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express';
 import { supabase } from './config/supabase.js';
 import express from 'express';
+import cors from 'cors';
+
 const app = express();
-// FIX: env var name is conventionally uppercase (PORT). `process.env.port` will be
-// undefined and `app.listen(undefined)` picks a random port — breaks deployments on
-// Render where PORT is injected.
-const port = process.env.port;
+const port = process.env.PORT;
 app.use(express.json());
-// FIX: missing `cors` middleware. Mobile/web client on a different origin will be
-// blocked. `cors` is already a dependency in package.json — wire it up here.
+app.use(cors());
 app.use(clerkMiddleware());
-// FIX: missing global error handler. Async route handlers that throw (see auth.js
-// where `sessionId`/`template`/`err` are undefined) will crash the process or hang
-// the request. Add a 4-arg error middleware after the routes.
+
+// Global error handler, catches all errors that happen in async route handlers.
+app.use((err, req, res, next) => {
+  console.error(err);
+  res.status(500).json({ error: err.message });
+});
+
 
 //Route definitions
 import programs from './routes/programs.js';
@@ -26,6 +28,11 @@ import locations from './routes/locations.js';
 import admin from './routes/admin.js';
 import timeSlots from './routes/timeSlots.js';
 import registrations from './routes/registrations.js';
+// TODO: add students.js file (waiting on mentor directions).
+// Possibly add post /students for the registration form?
+// (in order to have new students be created once a parent submits)
+// Import below won't work until implemented, commented until then.
+// import students from './routes/students.js'; */
 
 //Routes
 app.use('/programs', programs);
@@ -34,11 +41,8 @@ app.use('/locations', locations);
 app.use('/admin', admin);
 app.use('/time-slots', timeSlots);
 app.use('/registrations', registrations);
-// FIX: missing `/students` route. The client (registration_form.js handleSubmit)
-// POSTs to `/students` to create a child record before submitting a registration,
-// but no router is mounted here and no file exists for it. Either create
-// routes/students.js (POST to insert into `students` for the authenticated parent)
-// or change the registration flow to take student fields inline.
+// Commented until students.js is created
+// app.use('/students', students);
 
 //Listen on port 8000
 app.listen(port, () => {

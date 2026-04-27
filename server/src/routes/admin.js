@@ -1,24 +1,14 @@
-import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express';
+import { clerkMiddleware, clerkClient } from '@clerk/express';
 import { supabase } from '../config/supabase.js';
 import express from 'express';
 const router = express.Router();
+import { requireAuth } from '../middleware/auth.js';
+import { requireRole } from '../middleware/roleGuard.js';
 
-//Every endpoint in this file requires the user to be authorized as an admin, otherwise 403 is returned
-// FIX (architecture §4 "Middleware: Auth guard, Role guard, Validation"):
-//   The empty middleware/auth.js and middleware/roleGuard.js files should hold
-//   this logic. Right now every handler repeats the same `getAuth` + `auth.has`
-//   block (8 copies). Implement a `requireRole('sc4k:admin')` middleware and
-//   apply it once with `router.use(...)`. Same for parent routes.
-// FIX: also inconsistent with auth.js which uses `permission: 'sc4k:admin'`
-//   instead of `role: 'sc4k:admin'`. Pick one (Clerk treats them differently)
-//   and use it everywhere.
+router.use(requireAuth, requireRole('sc4k:admin'));
 
 //Students under a specific teacher, by day, with contact details
 router.get('/teachers/:id/students', async (req, res) => {
-  const auth = getAuth(req);
-  if (!auth.has({role: 'sc4k:admin'})) {
-    return res.status(403).send('Forbidden'); // Return 403 if user isn't authorized
-  };
   const { data, error } = await supabase
     .from('time_slots')
     .select('id, teacher_id, registrations (student_id, students (*))') // Show students with all related
@@ -37,9 +27,6 @@ router.get('/teachers/:id/students', async (req, res) => {
 // audit the route paths against the architecture endpoint table.
 //Add teacher
 router.post('/teachers/create', async (req, res) => {
-  const auth = getAuth(req);
-  if (!auth.has({role: 'sc4k:admin'})) {
-    return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   // FIX: no input validation. `name` is NOT NULL in the schema; if missing the
   // DB throws a 500 instead of a clean 400. Validate required fields (name)
   // and email format before insert. Apply the same pattern to every POST in
@@ -60,9 +47,6 @@ router.post('/teachers/create', async (req, res) => {
 
 //All students with program + parent info
 router.get('/students', async (req, res) => {
-  const auth = getAuth(req);
-  if (!auth.has({role: 'sc4k:admin'})) {
-    return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('students')
     .select('*, registrations (*, programs (*))') // Retrieve program, parent, and student information with a student id that matches request body
@@ -72,10 +56,7 @@ router.get('/students', async (req, res) => {
 
 //Create program
 router.post('/programs', async (req, res) => {
-  const auth = getAuth(req);
-  if (!auth.has({role: 'sc4k:admin'})) {
-    return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
-  const { data, error } = await supabase
+    const { data, error } = await supabase
     .from('programs')
     .insert({
       'name': req.body.name,
@@ -102,9 +83,6 @@ router.post('/programs', async (req, res) => {
 // approve/reject must go through this endpoint (not a generic UPDATE).
 //Pending registrations queue
 router.get('/registrations', async (req, res) => {
-  const auth = getAuth(req);
-  if (!auth.has({role: 'sc4k:admin'})) {
-    return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   // FIX: queue view in architecture (§1 admin table) shows student name and
   // time-slot info — selecting `*` from registrations alone gives the admin
   // only foreign-key UUIDs. Expand the select to embed students(*) and
@@ -119,9 +97,6 @@ router.get('/registrations', async (req, res) => {
 
 //Program detail with slot counts
 router.get('/programs/:id', async (req, res) => {
-  const auth = getAuth(req);
-  if (!auth.has({role: 'sc4k:admin'})) {
-    return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('programs')
     .select('*, time_slots (id, mode, teacher_id, day_of_week, max_capacity, current_count)')
@@ -132,9 +107,6 @@ router.get('/programs/:id', async (req, res) => {
 
 //Create time slot
 router.post('/time-slots', async (req, res) => {
-  const auth = getAuth(req);
-  if (!auth.has({role: 'sc4k:admin'})) {
-    return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('time_slots')
       .insert({
@@ -152,9 +124,6 @@ router.post('/time-slots', async (req, res) => {
 
 //All teachers with their courses and time slots
 router.get('/teachers', async (req, res) => {
-  const auth = getAuth(req);
-  if (!auth.has({role: 'sc4k:admin'})) {
-    return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('teachers')
     .select('*, time_slots (*, programs (*))')
