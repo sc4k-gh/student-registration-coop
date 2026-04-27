@@ -10,6 +10,13 @@ router.get('/my', async (req, res) => {
   const auth = getAuth(req)
   if (!auth.has({role: 'sc4k:parent'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
+  // FIX (bug): `auth.student_id` does not exist. `getAuth()` returns Clerk
+  // auth state — { userId, sessionId, has, ... } — never `student_id`. A
+  // parent owns *many* students, so this should: (1) look up the parent's
+  // local users.id from auth.userId (or store the mapping in Clerk public
+  // metadata), (2) find all students where `parent_id = users.id`, (3) return
+  // registrations whose student_id is in that list. As written this filter is
+  // `eq('student_id', undefined)` which selects everything (or errors).
   const { data, error } = await supabase
     .from('registrations')
     .select()
@@ -23,13 +30,28 @@ router.post('/', async (req, res) => {
   const auth = getAuth(req)
   if (!auth.has({role: 'sc4k:parent'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
+  // FIX (security / IDOR): the handler never verifies that
+  // `req.body.student_id` belongs to the authenticated parent. A parent could
+  // submit a registration for any other parent's child by guessing a UUID.
+  // Before inserting, SELECT students WHERE id = student_id AND parent_id =
+  // <this parent's users.id> and 403 if not found.
+  // FIX (architecture §2 "Capacity checks must be atomic"): no capacity check
+  // here. The schema's CHECK constraint (current_count <= max_capacity)
+  // combined with the AFTER-INSERT trigger will throw a constraint violation
+  // when a slot fills, which surfaces to the client as a generic 500. Wrap
+  // insert + count in a Postgres function (or RPC) and return a clean 409
+  // "slot full". Even better, hold a row-level lock on the time_slot during
+  // the check to prevent the 5/5 race.
   const { data, error } = await supabase
     .from('registrations')
     .insert({
+      // FIX (bug): `auth.body.student_id` is wrong on two counts — `auth` has
+      // no `body`, and the value should come from `req.body.student_id`. As
+      // written this inserts NULL into a NOT NULL column → 500.
       'student_id': auth.body.student_id,
       'program_id': req.body.program_id,
       'time_slot_id': req.body.time_slot_id,
-    });    
+    });
   if (error) {return res.status(500).json({ error: error.message })}
     else {res.json(data)};
 });
