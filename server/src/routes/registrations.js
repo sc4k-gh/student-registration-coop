@@ -8,7 +8,7 @@ const router = express.Router();
 //View own registrations + status
 router.get('/my', async (req, res) => {
   const auth = getAuth(req)
-  if (!auth.has({permission: 'sc4k:parent'})) {
+  if (!auth.has({role: 'sc4k:parent'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('registrations')
@@ -21,7 +21,7 @@ router.get('/my', async (req, res) => {
 //Submit a registration
 router.post('/', async (req, res) => {
   const auth = getAuth(req)
-  if (!auth.has({permission: 'sc4k:parent'})) {
+  if (!auth.has({role: 'sc4k:parent'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('registrations')

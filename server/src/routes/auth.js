@@ -20,7 +20,6 @@ router.post('/login', async (req, res) => {
 //Admin sets password on first login (email must be pre-seeded)
 router.post('/setup-password', async (req, res) => {
   const auth = getAuth(req);
-  const sessionId = req.auth.sessionId;
   if (!auth.has({permission: 'sc4k:admin'})) {
     return res.status(403).send('Forbidden'); // Return 403 if user isn't authorized
   };

@@ -8,7 +8,7 @@ const router = express.Router();
 //Students under a specific teacher, by day, with contact details
 router.get('/teachers/:id/students', async (req, res) => {
   const auth = getAuth(req);
-  if (!auth.has({permission: 'sc4k:admin'})) {
+  if (!auth.has({role: 'sc4k:admin'})) {
     return res.status(403).send('Forbidden'); // Return 403 if user isn't authorized
   };
   const { data, error } = await supabase
@@ -23,7 +23,7 @@ router.get('/teachers/:id/students', async (req, res) => {
 //Add teacher
 router.post('/teachers/create', async (req, res) => {
   const auth = getAuth(req);
-  if (!auth.has({permission: 'sc4k:admin'})) {
+  if (!auth.has({role: 'sc4k:admin'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('teachers')
@@ -39,7 +39,7 @@ router.post('/teachers/create', async (req, res) => {
 //All students with program + parent info
 router.get('/students', async (req, res) => {
   const auth = getAuth(req);
-  if (!auth.has({permission: 'sc4k:admin'})) {
+  if (!auth.has({role: 'sc4k:admin'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('students')
@@ -51,7 +51,7 @@ router.get('/students', async (req, res) => {
 //Create program
 router.post('/programs', async (req, res) => {
   const auth = getAuth(req);
-  if (!auth.has({permission: 'sc4k:admin'})) {
+  if (!auth.has({role: 'sc4k:admin'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('programs')
@@ -70,7 +70,7 @@ router.post('/programs', async (req, res) => {
 //Pending registrations queue
 router.get('/registrations', async (req, res) => {
   const auth = getAuth(req);
-  if (!auth.has({permission: 'sc4k:admin'})) {
+  if (!auth.has({role: 'sc4k:admin'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('registrations')
@@ -80,16 +80,15 @@ router.get('/registrations', async (req, res) => {
     else {res.json(data)};
 });
 
+//Program detail with slot counts
 router.get('/programs/:id', async (req, res) => {
   const auth = getAuth(req);
-  if (!auth.has({permission: 'sc4k:admin'})) {
+  if (!auth.has({role: 'sc4k:admin'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('programs')
-    .select('*, time_slots (id, program_id, current_count, max_capacity')
-    .eq('program_id', req.params.id); // Results matching given program id
-  //Currently broken, has to sum up current_counts from every time slot with given program id and subtract from max_capacity for slot count
-  data.slotcount = data.max_capacity - data.current_count; // Set slotcount property of response to the max capacity of the program - current registrations
+    .select('*, time_slots (id, mode, teacher_id, day_of_week, max_capacity, current_count)')
+    .eq('id', req.params.id); // Results matching given program id
   if (error) {return res.status(500).json({ error: error.message })}
     else {res.json(data)};
 });
@@ -97,7 +96,7 @@ router.get('/programs/:id', async (req, res) => {
 //Create time slot
 router.post('/time-slots', async (req, res) => {
   const auth = getAuth(req);
-  if (!auth.has({permission: 'sc4k:admin'})) {
+  if (!auth.has({role: 'sc4k:admin'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('time_slots')
@@ -117,7 +116,7 @@ router.post('/time-slots', async (req, res) => {
 //All teachers with their courses and time slots
 router.get('/teachers', async (req, res) => {
   const auth = getAuth(req);
-  if (!auth.has({permission: 'sc4k:admin'})) {
+  if (!auth.has({role: 'sc4k:admin'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   const { data, error } = await supabase
     .from('teachers')

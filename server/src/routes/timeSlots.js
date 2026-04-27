@@ -11,10 +11,7 @@ router.get('/', async (req, res) => {
     .eq('mode', req.query.mode) //Filter to slots using the supplied mode
     .lt('current_count', 'max_capacity'); //Filter to slots under capacity
 
-    // UPDATE: Created condition to only have location id be filtered only when we have an actual location.
-    // When location_id = undefined (e.g. for all online courses), the filter causes an error.
-    // As a result, filtering should be skipped when undefined.
-    if (req.query.location_id) {
+  if (req.query.location_id) {
       //Filter to slots at the supplied location (SKIP IF OFFLINE)
       query = query.eq('location_id', req.query.location_id) 
     }
