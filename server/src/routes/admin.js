@@ -13,20 +13,13 @@ router.get('/teachers/:id/students', async (req, res) => {
     .from('time_slots')
     .select('id, teacher_id, registrations (student_id, students (*))') // Show students with all related
     .eq('teacher_id', req.params.id) // Results matching teacher id
-    // FIX: comment says "Order results by day" but it orders by `id`. Change
-    // to .order('day_of_week') (and probably .order('start_time') as a tiebreak)
-    // to match the architecture's "Teacher → Students … on what days" view.
-    .order('id', { ascending: false });
+    .order('day_of_week', { ascending: false });
   if (error) {return res.status(500).json({ error: error.message })}
     else {res.json(data)};
 });
 
-// FIX (architecture §4 endpoint table): the documented endpoint is
-// `POST /admin/teachers`, not `/admin/teachers/create`. Rename to `/teachers`
-// to match the docs (and REST conventions). Same drift potential elsewhere —
-// audit the route paths against the architecture endpoint table.
 //Add teacher
-router.post('/teachers/create', async (req, res) => {
+router.post('/teachers', async (req, res) => {
   // FIX: no input validation. `name` is NOT NULL in the schema; if missing the
   // DB throws a 500 instead of a clean 400. Validate required fields (name)
   // and email format before insert. Apply the same pattern to every POST in
@@ -74,22 +67,25 @@ router.post('/programs', async (req, res) => {
     else {res.json(data)};
 });
 
-// FIX (missing endpoint): architecture §4 lists
-//   `PATCH /admin/registrations/:id` — "Approve or reject a registration".
-// This is the core admin workflow and is not implemented. Add a handler that
-// updates `status` to 'approved' or 'rejected', sets `reviewed_at` = NOW()
-// and `reviewed_by` = the admin's user id. Note that the schema's
-// decrement_slot_count trigger only fires on transition to 'rejected', so
-// approve/reject must go through this endpoint (not a generic UPDATE).
+//Approve or reject a registration
+router.post('/registrations/:id', async (req, res) => {
+    const { data, error } = await supabase
+      .from('registrations')
+      .update({
+        'status': req.body.status,
+        'reviewed_at': now(),
+        'reviewed_by': req.body.id
+      })
+      .eq('id', req.params.id); // Patch a registration status matching the given ID
+    if (error) {return res.status(500).json({ error: error.message })}
+    else {res.json(data)}; // Code to change the time slot count isn't needed, Supabase function decrement_slot_count handles it automatically without needing input
+});
+
 //Pending registrations queue
 router.get('/registrations', async (req, res) => {
-  // FIX: queue view in architecture (§1 admin table) shows student name and
-  // time-slot info — selecting `*` from registrations alone gives the admin
-  // only foreign-key UUIDs. Expand the select to embed students(*) and
-  // time_slots(*, programs(name)) so the UI doesn't need N+1 follow-up calls.
   const { data, error } = await supabase
     .from('registrations')
-    .select()
+    .select('*, time_slots (*, students (*) programs (name))')
     .eq('status', 'pending'); // Retrieve all registrations still marked pending
   if (error) {return res.status(500).json({ error: error.message })}
     else {res.json(data)};

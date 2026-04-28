@@ -3,6 +3,18 @@ import 'dotenv/config';
 // the Node API validating Supabase JWTs via middleware. This implementation uses Clerk
 // instead. Either update the architecture doc to reflect the Clerk decision, or replace
 // Clerk with Supabase Auth + a JWT-validating middleware.
+
+// ^ Excerpt of email from Vishnu below
+// "Here's the thing:
+// Authentication - Everything related to login/sign up/sign in/logout/sign out.
+
+// For this one, I would recommend you to use clerk.
+// Here's the link:-
+// https://clerk.com/user-authentication?utm_source=google&utm_medium=cpc&utm_campaign=SC_Google_Search_Brand_US&utm_adgroup=Brand&utm_term=clerk%20auth&gad_source=1&gad_campaignid=23228885679&gbraid=0AAAAAqJUiX69AZHXxpyTGQHlZGYLE1zP0
+
+// Integrate this into the application.
+// For the time being, use any of your account. Later, I will change it with the sc4k account.""
+
 import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express';
 import { supabase } from './config/supabase.js';
 import express from 'express';

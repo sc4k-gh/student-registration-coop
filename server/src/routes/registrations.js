@@ -1,13 +1,15 @@
-import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express';
+import { clerkMiddleware, clerkClient } from '@clerk/express';
 import { supabase } from '../config/supabase.js';
+
 import express from 'express';
+
 const router = express.Router();
 
 //Every endpoint in this file requires the user to be authorized as a parent, otherwise 403 is returned
 
 //View own registrations + status
 router.get('/my', async (req, res) => {
-  const auth = getAuth(req)
+  const auth = getAuth(req);
   if (!auth.has({role: 'sc4k:parent'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   // FIX (bug): `auth.student_id` does not exist. `getAuth()` returns Clerk
@@ -20,14 +22,14 @@ router.get('/my', async (req, res) => {
   const { data, error } = await supabase
     .from('registrations')
     .select()
-    .eq('student_id', auth.student_id); // Retrieve registration information with a student id that matches request body
+    .eq('student_id', req.body.student_id); // Retrieve registration information with a student id that matches request body
   if (error) {return res.status(500).json({ error: error.message })}
     else {res.json(data)};
 });
 
 //Submit a registration
 router.post('/', async (req, res) => {
-  const auth = getAuth(req)
+  const auth = getAuth(req);
   if (!auth.has({role: 'sc4k:parent'})) {
     return res.status(403).send('Forbidden')}; // Return 403 if user isn't authorized
   // FIX (security / IDOR): the handler never verifies that
@@ -43,12 +45,13 @@ router.post('/', async (req, res) => {
   // "slot full". Even better, hold a row-level lock on the time_slot during
   // the check to prevent the 5/5 race.
   const { data, error } = await supabase
+  //WIP
     .from('registrations')
+    .select('*, students (*)')
+    .eq('id', req.body.student_id)
+    .eq('parent_id', auth.userId)
     .insert({
-      // FIX (bug): `auth.body.student_id` is wrong on two counts — `auth` has
-      // no `body`, and the value should come from `req.body.student_id`. As
-      // written this inserts NULL into a NOT NULL column → 500.
-      'student_id': auth.body.student_id,
+      'student_id': req.body.student_id,
       'program_id': req.body.program_id,
       'time_slot_id': req.body.time_slot_id,
     });
