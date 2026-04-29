@@ -1,4 +1,4 @@
-import { clerkMiddleware, clerkClient } from '@clerk/express';
+import { clerkMiddleware, clerkClient, requireAuth, getAuth } from '@clerk/express';
 import { supabase } from '../config/supabase.js';
 
 import express from 'express';

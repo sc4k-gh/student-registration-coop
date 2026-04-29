@@ -6,6 +6,10 @@ const router = express.Router();
 
 //Admin sets password on first login (email must be pre-seeded)
 router.post('/setup-password', async (req, res) => {
+  const auth = getAuth(req);
+  if (!auth.has({role: 'sc4k:admin'})) {
+    return res.status(403).send('Forbidden'); // Return 403 if user isn't authorized
+  };
   //Update password of current session's user with request body
   const params = {password:req.body.password};
 
