@@ -19,10 +19,12 @@ router.get('/my', async (req, res) => {
   // metadata), (2) find all students where `parent_id = users.id`, (3) return
   // registrations whose student_id is in that list. As written this filter is
   // `eq('student_id', undefined)` which selects everything (or errors).
+  const user = getUser(req);
   const { data, error } = await supabase
-    .from('registrations')
-    .select()
-    .eq('student_id', req.body.student_id); // Retrieve registration information with a student id that matches request body
+    .from('students')
+    .select('*, registrations (*)')
+    .eq('parent_id', auth.userId); // TODO: Try doing this using metadata instead, maybe store student ids in parent account with an array
+  
   if (error) {return res.status(500).json({ error: error.message })}
     else {res.json(data)};
 });
@@ -44,8 +46,13 @@ router.post('/', async (req, res) => {
   // insert + count in a Postgres function (or RPC) and return a clean 409
   // "slot full". Even better, hold a row-level lock on the time_slot during
   // the check to prevent the 5/5 race.
-  const { data, error } = await supabase
+  if (
+    !req.body.program_id || // If any specified IDs are missing from the request body, return 400
+    !req.body.student_id || 
+    !req.body.time_slot_id) 
+      {return res.status(400).json({ error: 'Invalid input'})};
   //WIP
+  const { data, error } = await supabase
     .from('registrations')
     .select('*, students (*)')
     .eq('id', req.body.student_id)
@@ -54,6 +61,7 @@ router.post('/', async (req, res) => {
       'student_id': req.body.student_id,
       'program_id': req.body.program_id,
       'time_slot_id': req.body.time_slot_id,
+      'status': 'pending'
     });
   if (error) {return res.status(500).json({ error: error.message })}
     else {res.json(data)};
