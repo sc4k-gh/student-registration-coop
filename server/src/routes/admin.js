@@ -4,7 +4,11 @@ import express from 'express';
 const router = express.Router();
 import { requireAuth } from '../middleware/auth.js';
 import { requireRole } from '../middleware/roleGuard.js';
-import { startTransition } from 'react';
+// FIX ON LINE 11: startTransition is a frontend React import.
+// This file is a backend Node server file.
+// Frontend imports like React should not be used here
+// (They cause unexpected problems).
+// import { startTransition } from 'react';
 
 router.use(requireAuth, requireRole('sc4k:admin'));
 
@@ -54,8 +58,13 @@ router.get('/students', async (req, res) => {
 //Create program
 router.post('/programs', async (req, res) => {
   // If name, level, or target age are missing, return 400
-  if (!req.body.name || !req.body.level || !req.body.target_age) {return res.status(400).json({ error: 'Invalid input'})};
-     {return res.status(400).json({ error: 'Invalid input'})};
+  if (!req.body.name || !req.body.level || !req.body.target_age) 
+    {return res.status(400).json({ error: 'Invalid input'})};
+     // FIX ON LINE 67: Remove extra return. 
+     // A return statement is already on line 62
+     // Adding a second one here closes the function execution,
+     // Makes the rest of the code unreachable.
+     // {return res.status(400).json({ error: 'Invalid input'})};
   if (req.body.level != 'beginner' && req.body.level != 'intermediate' && req.body.level != 'advanced')
     {return res.status(400).json({ error: 'Invalid input'})};
   
@@ -67,7 +76,10 @@ router.post('/programs', async (req, res) => {
       'target_age': req.body.target_age,
       'description': req.body.description,
       'prerequisites': req.body.prerequisites,
-      'status': 'active'
+      // FIX ON LINE 82: remove 'status': 'active'
+      // Status is handled automatically (active)
+      // No need to manually include it, remove the field.
+      // 'status': 'active'
     })
     .select()
     .single();
@@ -84,7 +96,10 @@ router.post('/programs/update', async (req, res) => {
   const { data, error } = await supabase
     .from('programs')
     .update({ status: req.body.status })
-    .eq('id', req.body.id)
+    // FIX ON LINE 102: Use req.params.id (identifies which registration to update).
+    // req.body.id is a field value (e.g. status), not for selecting which record.
+    // .eq('id', req.body.id) 
+    .eq('id', req.params.id)
     .select()
     .single();
   
@@ -93,7 +108,8 @@ router.post('/programs/update', async (req, res) => {
 });
 
 //Approve or reject a registration
-router.post('/registrations/:id', async (req, res) => {
+// UPDATE: Endpoint should be PATCH, was originally POST (which is incorrect).
+router.patch('/registrations/:id', async (req, res) => {
   if (req.body.status != 'pending' && req.body.status != 'approved' && req.body.status != 'rejected')
     {return res.status(400).json({ error: 'Invalid input'})};
 
@@ -101,10 +117,18 @@ router.post('/registrations/:id', async (req, res) => {
     .from('registrations')
     .update({
       'status': req.body.status,
-      'reviewed_at': now(),
-      'reviewed_by': req.body.id
+      // FIX ON LINE 119: now() does not exist (it won't do anything).
+      // Use the proper JavaScript standard for getting the current data.
+      // 'reviewed_at': now(),
+      'reviewed_at': new Date().toISOString(),
+      // FIX: Logging incorrect ID.
+      // req.body.id is the registration id.
+      // use req.auth.userID to get the admin's Clerk ID.
+      //'reviewed_by': req.body.id
+      'reviewed_by': req.auth.userId
     })
-    .eq('id', req.body.id) // Patch a registration status matching the given ID
+    // FIX ON LINE 133: See line 102; same issue.
+    .eq('id', req.params.id) // Patch a registration status matching the given ID
     .select()
     .single();
 
@@ -116,7 +140,7 @@ router.post('/registrations/:id', async (req, res) => {
 router.get('/registrations', async (req, res) => {
   const { data, error } = await supabase
     .from('registrations')
-    .select('*, time_slots (*, students (*) programs (name))')
+    .select('*, time_slots (*, students (*), programs (name))')
     .eq('status', 'pending'); // Retrieve all registrations still marked pending
   
   if (error) {return res.status(500).json({ error: error.message })}
@@ -157,7 +181,10 @@ router.post('/time-slots', async (req, res) => {
       'day_of_week': req.body.day_of_week,
       'start_time': req.body.start_time,
       'end_time': req.body.end_time,
-      'max_capacity': req.body.max_capacity,})
+      // FIX ON LINE 185: added current_count to insert (was missing previously).
+      'current_count': req.body.current_count,
+      'max_capacity': req.body.max_capacity
+    })
       .select()
       .single();
   

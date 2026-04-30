@@ -7,9 +7,10 @@ const router = express.Router();
 //Admin sets password on first login (email must be pre-seeded)
 router.post('/setup-password', async (req, res) => {
   const auth = getAuth(req);
-  if (!auth.has({role: 'sc4k:admin'})) {
-    return res.status(403).send('Forbidden'); // Return 403 if user isn't authorized
-  };
+  const role = auth.sessionClaims?.metadata?.role;
+  if (role !== 'sc4k:admin') {
+    return res.status(403).send('Forbidden');
+  }
   //Update password of current session's user with request body
   const params = {password:req.body.password};
 
@@ -31,11 +32,39 @@ router.post('/signup', async (req, res) => {
   if (!req.body.emailAddress || !req.body.password) {
     return res.status(400).json({ error: 'Email and password required' });
   }
-  await clerkClient.users.createUser({
-    emailAddress: [req.body.emailAddress],
-    password: req.body.password,
-  });
-  res.status(200).json({success: true});
+  try {
+    // Create Clerk user
+    const clerkUser = await clerkClient.users.createUser({
+      emailAddress: [req.body.emailAddress],
+      password: req.body.password,
+    });
+
+    // Create local Supabase user
+    const { data: localUser, error } = await supabase
+      .from('users')
+      .insert({
+        email: req.body.emailAddress,
+        password_hash: 'clerk_managed',
+        role: 'parent',
+        name: req.body.name || req.body.emailAddress,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    // Store mapping in Clerk metadata
+    await clerkClient.users.updateUser(clerkUser.id, {
+      publicMetadata: { 
+        localUserId: localUser.id,
+        role: 'sc4k:parent'
+      }
+    });
+
+    res.status(200).json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 export default router; //Export routes

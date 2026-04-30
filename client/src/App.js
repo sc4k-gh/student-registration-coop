@@ -3,8 +3,9 @@ import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './navigation/AppNavigator';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ClerkProvider, ClerkLoaded } from '@clerk/expo';
+import { ClerkProvider, ClerkLoaded, useAuth } from '@clerk/expo';
 import * as SecureStore from 'expo-secure-store';
+import { setTokenGetter } from './api/client.js';
 
 // Get publishable key
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
@@ -22,6 +23,13 @@ const tokenCache = {
   },
 };
 
+// Wires up the Clerk token getter so every API request automatically includes auth headers.
+function TokenSetup() {
+  const { getToken } = useAuth();
+  setTokenGetter(getToken);
+  return null;
+}
+
 export default function App() {
   return (
     <ClerkProvider 
@@ -30,6 +38,7 @@ export default function App() {
       <ClerkLoaded>
         <QueryClientProvider client={queryClient}>
           <SafeAreaProvider>
+            <TokenSetup />
             <AppNavigator />
           </SafeAreaProvider>
         </QueryClientProvider>

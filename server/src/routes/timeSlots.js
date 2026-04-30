@@ -4,7 +4,7 @@ const router = express.Router();
 
 //List available slots with capacity info
 router.get('/', async (req, res) => {
-  if (!program_id || !mode) {
+  if (!req.query.program_id || !req.query.mode) {
     return res.status(400).json({ error: 'program_id and mode are required' });
   }
 
@@ -23,7 +23,6 @@ router.get('/', async (req, res) => {
   const { data, error } = await query;
 
   if (error) {return res.status(500).json({ error: error.message })}
-  else {res.json(data)};
 
     // Filter for available slots (under max capacity)
     const availableSlots = data.filter(slot => slot.current_count < slot.max_capacity);

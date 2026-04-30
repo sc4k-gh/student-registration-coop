@@ -1,9 +1,11 @@
 import React from 'react';
 import { Text, View, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useAuth } from '@clerk/expo';
 
 export default function LandingPage() {
     const navigation = useNavigation();
+    const { signOut, isSignedIn } = useAuth();
 
     return (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
@@ -24,6 +26,11 @@ export default function LandingPage() {
                 <Button
                     title="Register a Student"
                     onPress={() => navigation.navigate("Registration")}
+                />
+
+                <Button
+                    title="Sign Out"
+                    onPress={() => signOut()}
                 />
             </View>
         </View>
