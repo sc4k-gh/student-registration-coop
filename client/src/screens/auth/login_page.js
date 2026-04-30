@@ -17,17 +17,15 @@ export default function Page() {
       password,
     })
     if (error) {
-      console.error(JSON.stringify(error, null, 2))
       return
     }
 
     if (signIn.status === 'complete') {
       await signIn.finalize({
-        navigate: ({ session, decorateUrl }) => {
+        navigate: ({ session }) => {
           // Handle session tasks
           // See https://clerk.com/docs/guides/development/custom-flows/authentication/session-tasks
           if (session?.currentTask) {
-            console.log(session?.currentTask)
             return
           }
             // If no session tasks, navigate the signed-in user to the dashboard
@@ -47,9 +45,6 @@ export default function Page() {
       if (emailCodeFactor) {
         await signIn.mfa.sendEmailCode()
       }
-    } else {
-      // Check why the sign-in is not complete
-      console.error('Sign-in attempt not complete:', signIn)
     }
   }
 
@@ -62,16 +57,12 @@ export default function Page() {
           // Handle session tasks
           // See https://clerk.com/docs/guides/development/custom-flows/authentication/session-tasks
           if (session?.currentTask) {
-            console.log(session?.currentTask)
             return
           }
             // If no session tasks, navigate the signed-in user to the dashboard
             navigation.navigate('Dashboard')
         },
       })
-    } else {
-      // Check why the sign-in is not complete
-      console.error('Sign-in attempt not complete:', signIn)
     }
   }
   if (signIn.status === 'needs_second_factor') {
@@ -190,8 +181,6 @@ export default function Page() {
       >
         <Text style={styles.buttonText}>Continue</Text>
       </Pressable>
-      {/* For your debugging purposes. You can just console.log errors, but we put them in the UI for convenience */}
-      {errors && <Text style={styles.debug}>{JSON.stringify(errors, null, 2)}</Text>}
 
       <View style={styles.linkContainer}>
         <Text>Don't have an account? </Text>

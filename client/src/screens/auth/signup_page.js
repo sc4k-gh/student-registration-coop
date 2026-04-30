@@ -18,7 +18,6 @@ export default function Page() {
       password,
     })
     if (error) {
-      console.error(JSON.stringify(error, null, 2))
       return
     }
 
@@ -32,20 +31,16 @@ export default function Page() {
     if (signUp.status === 'complete') {
       await signUp.finalize({
         // Redirect the user to the home page after signing up
-        navigate: ({ session, decorateUrl }) => {
+        navigate: ({ session }) => {
           // Handle session tasks
           // See https://clerk.com/docs/guides/development/custom-flows/authentication/session-tasks
           if (session?.currentTask) {
-            console.log(session?.currentTask)
             return
           }
             // If no session tasks, navigate the signed-in user to the dashboard
             navigation.navigate('Dashboard')
         },
       })
-    } else {
-      // Check why the sign-up is not complete
-      console.error('Sign-up attempt not complete:', signUp)
     }
   }
 
@@ -143,8 +138,6 @@ export default function Page() {
       >
         <Text style={styles.buttonText}>Sign up</Text>
       </Pressable>
-      {/* For your debugging purposes. You can just console.log errors, but we put them in the UI for convenience */}
-      {errors && <Text style={styles.debug}>{JSON.stringify(errors, null, 2)}</Text>}
 
       <View style={styles.linkContainer}>
         <Text>Already have an account? </Text>
@@ -220,10 +213,5 @@ const styles = StyleSheet.create({
     color: '#d32f2f',
     fontSize: 12,
     marginTop: -8,
-  },
-  debug: {
-    fontSize: 10,
-    opacity: 0.5,
-    marginTop: 8,
   },
 })

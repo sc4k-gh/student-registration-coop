@@ -1,8 +1,21 @@
 import { clerkMiddleware, clerkClient, getAuth} from '@clerk/express';
 import { supabase } from '../config/supabase.js';
 import express from 'express';
-import jsonwebtoken from 'jsonwebtoken';
 const router = express.Router();
+
+/*
+  NOTE: New metadata strategy:
+  We store both role and localUserId in Clerk's publicMetadata, which gets
+  included in the JWT token automatically. This avoids extra DB lookups on
+  every authenticated request to map Clerk user IDs to local Supabase user IDs.
+ 
+  Inside Clerk publicMetadata, each user has:
+  {
+    role: 'sc4k:parent' OR 'sc4k:admin',
+    localUserId: '<uuid-from-supabase-users-table>'
+ * }
+*/
+
 
 //Admin sets password on first login (email must be pre-seeded)
 router.post('/setup-password', async (req, res) => {
@@ -40,6 +53,8 @@ router.post('/signup', async (req, res) => {
     });
 
     // Create local Supabase user
+    // Mapping stored in Clerk metadata avoids DB lookup on every request.
+    // This embeds the local Supabase user ID directly in Clerk's JWT token.
     const { data: localUser, error } = await supabase
       .from('users')
       .insert({
