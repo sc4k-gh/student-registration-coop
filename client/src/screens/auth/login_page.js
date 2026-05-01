@@ -48,23 +48,15 @@ export default function Page() {
     }
   }
 
-  const handleVerify = async () => {
-    await signIn.mfa.verifyEmailCode({ code })
+  const handleVerify = async () => { 
+    await signIn.mfa.verifyEmailCode({ code: code }) 
+    
+    if (signIn.status === 'complete') { 
+      await signIn.finalize() // Navigate directly after finalize completes 
+      navigation.navigate('Dashboard') 
+    } 
+  } 
 
-    if (signIn.status === 'complete') {
-      await signIn.finalize({
-        navigate: ({ session }) => {
-          // Handle session tasks
-          // See https://clerk.com/docs/guides/development/custom-flows/authentication/session-tasks
-          if (session?.currentTask) {
-            return
-          }
-            // If no session tasks, navigate the signed-in user to the dashboard
-            navigation.navigate('Dashboard')
-        },
-      })
-    }
-  }
   if (signIn.status === 'needs_second_factor') {
     return (
       <View style={styles.container}>

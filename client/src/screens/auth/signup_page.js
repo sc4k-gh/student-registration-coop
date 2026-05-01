@@ -2,6 +2,7 @@ import { useAuth, useSignUp } from '@clerk/expo'
 import { useNavigation } from '@react-navigation/native'
 import React from 'react'
 import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native'
+import apiClient from '../../api/client.js';
 
 export default function Page() {
   const { signUp, errors, fetchStatus } = useSignUp()
@@ -10,39 +11,40 @@ export default function Page() {
 
   const [emailAddress, setEmailAddress] = React.useState('')
   const [password, setPassword] = React.useState('')
+  const [name, setName] = React.useState('')
   const [code, setCode] = React.useState('')
 
   const handleSubmit = async () => {
-    const { error } = await signUp.password({
-      emailAddress,
-      password,
-    })
-    if (error) {
-      return
-    }
-
-    if (!error) await signUp.verifications.sendEmailCode()
+  // Signup validation. if any of these fields are missing, don't accept signup.
+  // Clerk will show the missing field message. 
+  if (!name || !emailAddress || !password) {
+    return;
   }
-
-  const handleVerify = async () => {
-    await signUp.verifications.verifyEmailCode({
-      code,
-    })
-    if (signUp.status === 'complete') {
-      await signUp.finalize({
-        // Redirect the user to the home page after signing up
-        navigate: ({ session }) => {
-          // Handle session tasks
-          // See https://clerk.com/docs/guides/development/custom-flows/authentication/session-tasks
-          if (session?.currentTask) {
-            return
-          }
-            // If no session tasks, navigate the signed-in user to the dashboard
-            navigation.navigate('Dashboard')
-        },
-      })
-    }
+  
+  // Create the new local student in Supabase, with the given signup info.
+  const { data, error } = await apiClient.post('/auth/signup', {
+    name,
+    emailAddress,
+    password,
+  });
+  
+  if (error) {
+    // Handle error (show message to user)
+    return;
   }
+  
+  // Success - send verification email
+  await signUp.verifications.sendEmailCode();
+}
+
+  const handleVerify = async () => { 
+    await signUp.verifications.verifyEmailCode({ code: code })
+    
+    if (signIn.status === 'complete') { 
+      await signIn.finalize() // Navigate directly after finalize completes 
+      navigation.navigate('Dashboard') 
+    } 
+  } 
 
   if (signUp.status === 'complete' || isSignedIn) {
     return null
@@ -101,6 +103,17 @@ export default function Page() {
       <Text style={styles.title}>
         Sign up
       </Text>
+
+      <Text style={styles.label}>Name</Text>
+      <TextInput
+        style={styles.input}
+        value={name}
+        placeholder="Enter your name"
+        placeholderTextColor="#666666"
+        onChangeText={(name) => setName(name)}
+        autoCapitalize="words"
+      />
+
 
       <Text style={styles.label}>Email address</Text>
       <TextInput

@@ -29,7 +29,7 @@ router.post('/setup-password', async (req, res) => {
 
   try {
     const response = await clerkClient.users.updateUser(
-      req.auth.userId, 
+      auth.userId, 
       { password: req.body.password }
     );
     res.json(response);
