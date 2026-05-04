@@ -1,142 +1,33 @@
-import { useSignIn } from '@clerk/expo'
-import { useNavigation } from '@react-navigation/native'
-import React from 'react'
-import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native'
+import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native';
+import { useAuth } from '../../auth/AuthProvider.js';
 
 export default function Page() {
-  const { signIn, errors, fetchStatus } = useSignIn()
-  const navigation = useNavigation()
+  const { signIn } = useAuth();
+  const navigation = useNavigation();
 
-  const [emailAddress, setEmailAddress] = React.useState('')
-  const [password, setPassword] = React.useState('')
-  const [code, setCode] = React.useState('')
+  const [emailAddress, setEmailAddress] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
 
   const handleSubmit = async () => {
-    const { error } = await signIn.password({
-      emailAddress,
-      password,
-    })
+    setErrorMessage('');
+    setSubmitting(true);
+    const { error } = await signIn(emailAddress, password);
+    setSubmitting(false);
     if (error) {
-      return
+      setErrorMessage(error.message);
+      return;
     }
-
-    if (signIn.status === 'complete') {
-      await signIn.finalize({
-        navigate: ({ session }) => {
-          // Handle session tasks
-          // See https://clerk.com/docs/guides/development/custom-flows/authentication/session-tasks
-          if (session?.currentTask) {
-            return
-          }
-            // If no session tasks, navigate the signed-in user to the dashboard
-            navigation.navigate('Dashboard')
-        },
-      })
-    } else if (signIn.status === 'needs_second_factor') {
-      // Send verification code for multi-factor authentication (MFA)
-      await signIn.mfa.sendEmailCode()
-    } else if (signIn.status === 'needs_client_trust') {
-      // For other second factor strategies,
-      // see https://clerk.com/docs/guides/development/custom-flows/authentication/client-trust
-      const emailCodeFactor = signIn.supportedSecondFactors.find(
-        (factor) => factor.strategy === 'email_code',
-      )
-
-      if (emailCodeFactor) {
-        await signIn.mfa.sendEmailCode()
-      }
-    }
-  }
-
-  const handleVerify = async () => { 
-    await signIn.mfa.verifyEmailCode({ code: code }) 
-    
-    if (signIn.status === 'complete') { 
-      await signIn.finalize() // Navigate directly after finalize completes 
-      navigation.navigate('Dashboard') 
-    } 
-  } 
-
-  if (signIn.status === 'needs_second_factor') {
-    return (
-      <View style={styles.container}>
-        <Text style={[styles.title, { fontSize: 24, fontWeight: 'bold' }]}>
-          Verify your account
-        </Text>
-        <TextInput
-          style={styles.input}
-          value={code}
-          placeholder="Enter your verification code"
-          placeholderTextColor="#666666"
-          onChangeText={(code) => setCode(code)}
-          keyboardType="numeric"
-        />
-        <Pressable
-          style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-          onPress={handleVerify}
-        >
-          <Text style={styles.buttonText}>Verify</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
-          onPress={() => signIn.reset()}
-        >
-          <Text style={styles.secondaryButtonText}>Start over</Text>
-        </Pressable>
-      </View>
-    )
-  }
-
-  if (signIn.status === 'needs_client_trust') {
-    return (
-      <View style={styles.container}>
-        <Text style={[styles.title, { fontSize: 24, fontWeight: 'bold' }]}>
-          Verify your account
-        </Text>
-        <TextInput
-          style={styles.input}
-          value={code}
-          placeholder="Enter your verification code"
-          placeholderTextColor="#666666"
-          onChangeText={(code) => setCode(code)}
-          keyboardType="numeric"
-        />
-        {errors.fields.code && (
-          <Text style={styles.error}>{errors.fields.code.message}</Text>
-        )}
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            fetchStatus === 'fetching' && styles.buttonDisabled,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={handleVerify}
-          disabled={fetchStatus === 'fetching'}
-        >
-          <Text style={styles.buttonText}>Verify</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
-          onPress={() => signIn.mfa.sendEmailCode()}
-        >
-          <Text style={styles.secondaryButtonText}>I need a new code</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
-          onPress={() => signIn.reset()}
-        >
-          <Text style={styles.secondaryButtonText}>Start over</Text>
-        </Pressable>
-      </View>
-    )
-  }
+    navigation.navigate('Dashboard');
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Sign in
-      </Text>
-      
+      <Text style={styles.title}>Sign in</Text>
+
       <Text style={styles.label}>Email address</Text>
       <TextInput
         style={styles.input}
@@ -144,71 +35,54 @@ export default function Page() {
         value={emailAddress}
         placeholder="Enter email"
         placeholderTextColor="#666666"
-        onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
+        onChangeText={setEmailAddress}
         keyboardType="email-address"
       />
-      {errors.fields.identifier && (
-        <Text style={styles.error}>{errors.fields.identifier.message}</Text>
-      )}
+
       <Text style={styles.label}>Password</Text>
       <TextInput
         style={styles.input}
         value={password}
         placeholder="Enter password"
         placeholderTextColor="#666666"
-        secureTextEntry={true}
-        onChangeText={(password) => setPassword(password)}
+        secureTextEntry
+        onChangeText={setPassword}
       />
-      {errors.fields.password && (
-        <Text style={styles.error}>{errors.fields.password.message}</Text>
-      )}
+
+      {!!errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
+
       <Pressable
         style={({ pressed }) => [
           styles.button,
-          (!emailAddress || !password || fetchStatus === 'fetching') && styles.buttonDisabled,
+          (!emailAddress || !password || submitting) && styles.buttonDisabled,
           pressed && styles.buttonPressed,
         ]}
         onPress={handleSubmit}
-        disabled={!emailAddress || !password || fetchStatus === 'fetching'}
+        disabled={!emailAddress || !password || submitting}
       >
         <Text style={styles.buttonText}>Continue</Text>
       </Pressable>
 
-      {/* SIGNUP PAGE BUTTON  */}
       <View style={styles.linkContainer}>
         <Text>Don't have an account? </Text>
-        <Pressable
-            onPress={() => navigation.navigate('SignUp')}>
-            <Text style={styles.secondaryButtonText}>Sign up</Text>
+        <Pressable onPress={() => navigation.navigate('SignUp')}>
+          <Text style={styles.secondaryButtonText}>Sign up</Text>
         </Pressable>
       </View>
 
-      {/* LANDING PAGE/RETURN BUTTON */}
       <View style={styles.linkContainer}>
-        <Pressable
-          onPress={() => navigation.navigate('Landing')}>
+        <Pressable onPress={() => navigation.navigate('Landing')}>
           <Text style={styles.secondaryButtonText}>Back to landing page</Text>
-      </Pressable>
+        </Pressable>
       </View>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  label: {
-    fontWeight: '600',
-    fontSize: 14,
-  },
+  container: { flex: 1, padding: 20, gap: 12 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
+  label: { fontWeight: '600', fontSize: 14 },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -225,41 +99,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  buttonPressed: {
-    opacity: 0.7,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    color: '#0a7ea4',
-    fontWeight: '600',
-  },
-  linkContainer: {
-    flexDirection: 'row',
-    gap: 4,
-    marginTop: 12,
-    alignItems: 'center',
-  },
-  error: {
-    color: '#d32f2f',
-    fontSize: 12,
-    marginTop: -8,
-  },
-  debug: {
-    fontSize: 10,
-    opacity: 0.5,
-    marginTop: 8,
-  },
-})
+  buttonPressed: { opacity: 0.7 },
+  buttonDisabled: { opacity: 0.5 },
+  buttonText: { color: '#fff', fontWeight: '600' },
+  secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
+  linkContainer: { flexDirection: 'row', gap: 4, marginTop: 12, alignItems: 'center' },
+  error: { color: '#d32f2f', fontSize: 12 },
+});

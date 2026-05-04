@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text, View, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useAuth } from '@clerk/expo';
+import { useAuth } from '../auth/AuthProvider.js';
 
 export default function LandingPage() {
     const navigation = useNavigation();
@@ -17,7 +17,7 @@ export default function LandingPage() {
                     title="Login"
                     onPress={() => navigation.navigate("Login")}
                 />
-                   
+
                 <Button
                     title="Go to Dashboard"
                     onPress={() => navigation.navigate("Dashboard")}
@@ -28,10 +28,12 @@ export default function LandingPage() {
                     onPress={() => navigation.navigate("Registration")}
                 />
 
-                <Button
-                    title="Sign Out"
-                    onPress={() => signOut()}
-                />
+                {isSignedIn && (
+                    <Button
+                        title="Sign Out"
+                        onPress={() => signOut()}
+                    />
+                )}
             </View>
         </View>
     );

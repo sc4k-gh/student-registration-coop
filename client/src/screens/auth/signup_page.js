@@ -1,108 +1,53 @@
-import { useAuth, useSignUp } from '@clerk/expo'
-import { useNavigation } from '@react-navigation/native'
-import React from 'react'
-import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native'
+import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native';
 import apiClient from '../../api/client.js';
+import { useAuth } from '../../auth/AuthProvider.js';
 
 export default function Page() {
-  const { signUp, errors, fetchStatus } = useSignUp()
-  const { isSignedIn } = useAuth()
-  const navigation = useNavigation()
+  const { signIn } = useAuth();
+  const navigation = useNavigation();
 
-  const [emailAddress, setEmailAddress] = React.useState('')
-  const [password, setPassword] = React.useState('')
-  const [name, setName] = React.useState('')
-  const [code, setCode] = React.useState('')
+  const [emailAddress, setEmailAddress] = React.useState('');
+  const [password, setPassword] = React.useState('');
+  const [name, setName] = React.useState('');
+  const [phoneNumber, setPhoneNumber] = React.useState('');
+  const [errorMessage, setErrorMessage] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
 
   const handleSubmit = async () => {
-  // Signup validation. if any of these fields are missing, don't accept signup.
-  // Clerk will show the missing field message. 
-  if (!name || !emailAddress || !password) {
-    return;
-  }
-  
-  // Create the new local student in Supabase, with the given signup info.
-  const { data, error } = await apiClient.post('/auth/signup', {
-    name,
-    emailAddress,
-    password,
-  });
-  
-  if (error) {
-    // Handle error (show message to user)
-    return;
-  }
-  
-  // Success - send verification email
-  await signUp.verifications.sendEmailCode();
-}
+    setErrorMessage('');
+    if (!name || !emailAddress || !password || !phoneNumber) {
+      setErrorMessage('All fields are required');
+      return;
+    }
 
-  const handleVerify = async () => { 
-    await signUp.verifications.verifyEmailCode({ code: code })
-    
-    if (signIn.status === 'complete') { 
-      await signIn.finalize() // Navigate directly after finalize completes 
-      navigation.navigate('Dashboard') 
-    } 
-  } 
+    setSubmitting(true);
+    const result = await apiClient.post('/auth/signup', {
+      name,
+      emailAddress,
+      password,
+      phone_number: phoneNumber,
+    });
 
-  if (signUp.status === 'complete' || isSignedIn) {
-    return null
-  }
+    if (result?.error) {
+      setSubmitting(false);
+      setErrorMessage(result.error);
+      return;
+    }
 
-  if (
-    signUp.status === 'missing_requirements' &&
-    signUp.unverifiedFields.includes('email_address') &&
-    signUp.missingFields.length === 0
-  ) {
-    return (
-      <View style={styles.container}>
-        <Text style={styles.title}>
-          Verify your account
-        </Text>
-        <TextInput
-          style={styles.input}
-          value={code}
-          placeholder="Enter your verification code"
-          placeholderTextColor="#666666"
-          onChangeText={(code) => setCode(code)}
-          keyboardType="numeric"
-        />
-        {errors.fields.code && (
-          <Text style={styles.error}>{errors.fields.code.message}</Text>
-        )}
-        <Pressable
-          style={({ pressed }) => [
-            styles.button,
-            fetchStatus === 'fetching' && styles.buttonDisabled,
-            pressed && styles.buttonPressed,
-          ]}
-          onPress={handleVerify}
-          disabled={fetchStatus === 'fetching'}
-        >
-          <Text style={styles.buttonText}>Verify</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
-          onPress={() => signUp.verifications.sendEmailCode()}
-        >
-          <Text style={styles.secondaryButtonText}>I need a new code</Text>
-        </Pressable>
-        <Pressable
-          style={({ pressed }) => [styles.secondaryButton, pressed && styles.buttonPressed]}
-          onPress={() => signUp.reset()}
-        >
-          <Text style={styles.secondaryButtonText}>Start over</Text>
-        </Pressable>
-      </View>
-    )
-  }
+    const { error: signInError } = await signIn(emailAddress, password);
+    setSubmitting(false);
+    if (signInError) {
+      setErrorMessage(signInError.message);
+      return;
+    }
+    navigation.navigate('Dashboard');
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        Sign up
-      </Text>
+      <Text style={styles.title}>Sign up</Text>
 
       <Text style={styles.label}>Name</Text>
       <TextInput
@@ -110,10 +55,9 @@ export default function Page() {
         value={name}
         placeholder="Enter your name"
         placeholderTextColor="#666666"
-        onChangeText={(name) => setName(name)}
+        onChangeText={setName}
         autoCapitalize="words"
       />
-
 
       <Text style={styles.label}>Email address</Text>
       <TextInput
@@ -122,74 +66,64 @@ export default function Page() {
         value={emailAddress}
         placeholder="Enter email"
         placeholderTextColor="#666666"
-        onChangeText={(emailAddress) => setEmailAddress(emailAddress)}
+        onChangeText={setEmailAddress}
         keyboardType="email-address"
       />
-      {errors.fields.emailAddress && (
-        <Text style={styles.error}>{errors.fields.emailAddress.message}</Text>
-      )}
+
+      <Text style={styles.label}>Phone number</Text>
+      <TextInput
+        style={styles.input}
+        value={phoneNumber}
+        placeholder="Enter phone number"
+        placeholderTextColor="#666666"
+        onChangeText={setPhoneNumber}
+        keyboardType="phone-pad"
+      />
+
       <Text style={styles.label}>Password</Text>
       <TextInput
         style={styles.input}
         value={password}
         placeholder="Enter password"
         placeholderTextColor="#666666"
-        secureTextEntry={true}
-        onChangeText={(password) => setPassword(password)}
+        secureTextEntry
+        onChangeText={setPassword}
       />
-      {errors.fields.password && (
-        <Text style={styles.error}>{errors.fields.password.message}</Text>
-      )}
+
+      {!!errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
+
       <Pressable
         style={({ pressed }) => [
           styles.button,
-          (!emailAddress || !password || fetchStatus === 'fetching') && styles.buttonDisabled,
+          submitting && styles.buttonDisabled,
           pressed && styles.buttonPressed,
         ]}
         onPress={handleSubmit}
-        disabled={!emailAddress || !password || fetchStatus === 'fetching'}
+        disabled={submitting}
       >
         <Text style={styles.buttonText}>Sign up</Text>
       </Pressable>
 
-      {/* LOGIN PAGE BUTTON */}
       <View style={styles.linkContainer}>
         <Text>Already have an account? </Text>
-        <Pressable
-        onPress={() => navigation.navigate('Login')}>
+        <Pressable onPress={() => navigation.navigate('Login')}>
           <Text style={styles.secondaryButtonText}>Log in</Text>
         </Pressable>
       </View>
 
-      {/* LANDING PAGE/RETURN BUTTON */}
       <View style={styles.linkContainer}>
-        <Pressable
-          onPress={() => navigation.navigate('Landing')}>
+        <Pressable onPress={() => navigation.navigate('Landing')}>
           <Text style={styles.secondaryButtonText}>Back to landing page</Text>
         </Pressable>
       </View>
-
-      {/* Required for sign-up flows. Clerk's bot sign-up protection is enabled by default */}
-      <View nativeID="clerk-captcha" />
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-    gap: 12,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-  label: {
-    fontWeight: '600',
-    fontSize: 14,
-  },
+  container: { flex: 1, padding: 20, gap: 12 },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
+  label: { fontWeight: '600', fontSize: 14 },
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
@@ -206,36 +140,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
-  buttonPressed: {
-    opacity: 0.7,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  buttonText: {
-    color: '#fff',
-    fontWeight: '600',
-  },
-  secondaryButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  secondaryButtonText: {
-    color: '#0a7ea4',
-    fontWeight: '600',
-  },
-  linkContainer: {
-    flexDirection: 'row',
-    gap: 4,
-    marginTop: 12,
-    alignItems: 'center',
-  },
-  error: {
-    color: '#d32f2f',
-    fontSize: 12,
-    marginTop: -8,
-  },
-})
+  buttonPressed: { opacity: 0.7 },
+  buttonDisabled: { opacity: 0.5 },
+  buttonText: { color: '#fff', fontWeight: '600' },
+  secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
+  linkContainer: { flexDirection: 'row', gap: 4, marginTop: 12, alignItems: 'center' },
+  error: { color: '#d32f2f', fontSize: 12 },
+});
