@@ -152,11 +152,20 @@ export default function Page() {
         <Text style={styles.buttonText}>Sign up</Text>
       </Pressable>
 
+      {/* LOGIN PAGE BUTTON */}
       <View style={styles.linkContainer}>
         <Text>Already have an account? </Text>
         <Pressable
         onPress={() => navigation.navigate('Login')}>
-          <Text type="link">Log in</Text>
+          <Text style={styles.secondaryButtonText}>Log in</Text>
+        </Pressable>
+      </View>
+
+      {/* LANDING PAGE/RETURN BUTTON */}
+      <View style={styles.linkContainer}>
+        <Pressable
+          onPress={() => navigation.navigate('Landing')}>
+          <Text style={styles.secondaryButtonText}>Back to landing page</Text>
         </Pressable>
       </View>
 
@@ -173,6 +182,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
+    fontSize: 24,
+    fontWeight: 'bold',
     marginBottom: 8,
   },
   label: {

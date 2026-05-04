@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, Modal, StyleSheet } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, Modal, StyleSheet, Pressable } from 'react-native';
+import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'; 
 import apiClient from '../../api/client.js'; 
 import { Picker } from '@react-native-picker/picker';
@@ -23,6 +24,9 @@ export default function RegistrationForm() {
     const [selectedMode, setSelectedMode] = useState('');
     const [selectedLocation, setSelectedLocation] = useState('');
     const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+
+    //Set up navigation
+    const navigation = useNavigation()
 
     // Fetch programs locations, and time slots from the backend.
     const { data: programs, isLoading: programsLoading } = useQuery({
@@ -112,6 +116,7 @@ export default function RegistrationForm() {
                     value={studentName}
                     onChangeText={setStudentName}
                     placeholder="Enter student name"
+                    placeholderTextColor= "#666666"
                 />
 
             { /* Email */}
@@ -121,6 +126,7 @@ export default function RegistrationForm() {
                     value={studentEmail} 
                     onChangeText={setStudentEmail}
                     placeholder="Enter student email"
+                    placeholderTextColor= "#666666"
                     keyboardType="email-address"
                 />
                 
@@ -131,6 +137,7 @@ export default function RegistrationForm() {
                         value={studentPhone}
                         onChangeText={setStudentPhone}
                         placeholder="Enter student phone"
+                        placeholderTextColor= "#666666"
                         keyboardType="phone-pad"
                     />
 
@@ -141,6 +148,7 @@ export default function RegistrationForm() {
                         value={studentAge}
                         onChangeText={setStudentAge}
                         placeholder="Enter age"
+                        placeholderTextColor= "#666666"
                         keyboardType="numeric"
                     />
                 
@@ -151,6 +159,7 @@ export default function RegistrationForm() {
                         value={studentDescription}
                         onChangeText={setStudentDescription}
                         placeholder="Tell us about the student"
+                        placeholderTextColor= "#666666"
                         multiline 
                         numberOfLines={3}
                     />
@@ -168,6 +177,7 @@ export default function RegistrationForm() {
                     value={parentName}
                     onChangeText={setParentName}
                     placeholder="Enter parent name"
+                    placeholderTextColor= "#666666"
                 />
 
             { /* Email */}
@@ -177,6 +187,7 @@ export default function RegistrationForm() {
                     value={parentEmail} 
                     onChangeText={setParentEmail}
                     placeholder="Enter parent email"
+                    placeholderTextColor= "#666666"
                     keyboardType="email-address"
                 />
                 
@@ -187,6 +198,7 @@ export default function RegistrationForm() {
                         value={parentPhone}
                         onChangeText={setParentPhone}
                         placeholder="Enter parent phone"
+                        placeholderTextColor= "#666666"
                         keyboardType="phone-pad"
                     />
             </View>
@@ -273,6 +285,13 @@ export default function RegistrationForm() {
             <Text style={styles.submitButtonText}>Submit Registration</Text>
         </TouchableOpacity>
 
+        {/* LANDING PAGE/RETURN BUTTON */}
+        <View style={styles.linkContainer}>
+            <Pressable
+                onPress={() => navigation.navigate('Landing')}>
+                <Text style={styles.secondaryButtonText}>Back to landing page</Text>
+            </Pressable>
+        </View>
         </ScrollView>
     );
 }
@@ -317,6 +336,16 @@ const styles = StyleSheet.create({
         padding: 10,
         marginBottom: 15,
         backgroundColor: '#fafafa',
+    },
+    secondaryButtonText: {
+    color: '#0a7ea4',
+    fontWeight: '600',
+    },
+    linkContainer: {
+    flexDirection: 'row',
+    gap: 4,
+    marginTop: 12,
+    alignItems: 'center',
     },
     submitButton: {
       backgroundColor: '#007AFF',

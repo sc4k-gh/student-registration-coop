@@ -136,7 +136,7 @@ export default function Page() {
       <Text style={styles.title}>
         Sign in
       </Text>
-
+      
       <Text style={styles.label}>Email address</Text>
       <TextInput
         style={styles.input}
@@ -174,12 +174,21 @@ export default function Page() {
         <Text style={styles.buttonText}>Continue</Text>
       </Pressable>
 
+      {/* SIGNUP PAGE BUTTON  */}
       <View style={styles.linkContainer}>
         <Text>Don't have an account? </Text>
         <Pressable
             onPress={() => navigation.navigate('SignUp')}>
             <Text style={styles.secondaryButtonText}>Sign up</Text>
         </Pressable>
+      </View>
+
+      {/* LANDING PAGE/RETURN BUTTON */}
+      <View style={styles.linkContainer}>
+        <Pressable
+          onPress={() => navigation.navigate('Landing')}>
+          <Text style={styles.secondaryButtonText}>Back to landing page</Text>
+      </Pressable>
       </View>
     </View>
   )
@@ -192,6 +201,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
+    fontSize: 24,
+    fontWeight: 'bold',
     marginBottom: 8,
   },
   label: {
