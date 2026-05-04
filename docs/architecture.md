@@ -261,7 +261,20 @@ users (admin) ──1:N──▶ registrations (reviewed_by)
 
 ---
 
-## 6. Verification
+## 6. Database Setup
+
+Two SQL artifacts must be applied to the Supabase project before the API works:
+
+| File | Purpose |
+|------|---------|
+| [server/db/migrations/001_register_with_capacity.sql](../server/db/migrations/001_register_with_capacity.sql) | `register_with_capacity()` Postgres function. Atomically validates slot capacity, inserts the registration, and increments `time_slots.current_count`. Called by `POST /registrations`. |
+| [server/db/migrations/002_rls_policies.sql](../server/db/migrations/002_rls_policies.sql) | RLS policies for all 7 tables. Parents see only their own data; admins see all; programs/locations/teachers/time_slots are read-by-any-authenticated, write-by-admin. The Node API uses the service-role key (which bypasses RLS) — these policies are defense-in-depth for any future direct-to-Supabase client. |
+
+RLS must be **enabled** on each table (Table Editor → toggle) before the policies in `002` will take effect.
+
+---
+
+## 7. Verification
 
 - Review schema covers all form fields from the registration flow
 - Confirm capacity logic: `current_count` on `time_slots` accurately reflects pending + approved registrations
