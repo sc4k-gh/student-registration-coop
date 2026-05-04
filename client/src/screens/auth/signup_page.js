@@ -10,6 +10,7 @@ export default function Page() {
   const navigation = useNavigation()
 
   const [emailAddress, setEmailAddress] = React.useState('')
+  const [phone, setPhone] = React.useState('')
   const [password, setPassword] = React.useState('')
   const [name, setName] = React.useState('')
   const [code, setCode] = React.useState('')
@@ -17,7 +18,7 @@ export default function Page() {
   const handleSubmit = async () => {
   // Signup validation. if any of these fields are missing, don't accept signup.
   // Clerk will show the missing field message. 
-  if (!name || !emailAddress || !password) {
+  if (!name || !emailAddress || !password || !phone) {
     return;
   }
   
@@ -26,6 +27,7 @@ export default function Page() {
     name,
     emailAddress,
     password,
+    phone,
   });
   
   if (error) {
@@ -114,6 +116,15 @@ export default function Page() {
         autoCapitalize="words"
       />
 
+      <Text style={styles.label}>Phone Number *</Text>
+      <TextInput
+        style={styles.input}
+        value={phone}
+        placeholder="Enter phone number"
+        placeholderTextColor="#666666"
+        onChangeText={(phone) => setPhone(phone)}
+        keyboardType="phone-pad"
+      />
 
       <Text style={styles.label}>Email address</Text>
       <TextInput
