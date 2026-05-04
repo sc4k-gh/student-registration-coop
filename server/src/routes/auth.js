@@ -41,8 +41,8 @@ router.post('/setup-password', async (req, res) => {
 
 //Parent sign-up
 router.post('/signup', async (req, res) => {
-  // Validate email and password; check if they are present and well-formed
-  if (!req.body.emailAddress || !req.body.password) {
+  // Validate email, password, and phone number; check if they are present and well-formed
+  if (!req.body.emailAddress || !req.body.password || !req.body.phone) {
     return res.status(400).json({ error: 'Email and password required' });
   }
   try {
@@ -62,6 +62,7 @@ router.post('/signup', async (req, res) => {
         password_hash: 'clerk_managed',
         role: 'parent',
         name: req.body.name || req.body.emailAddress,
+        phone: req.body.phone
       })
       .select()
       .single();
