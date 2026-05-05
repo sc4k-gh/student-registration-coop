@@ -76,7 +76,7 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 | **State Management** | React Query | Pairs well with Supabase for data fetching/caching |
 | **Backend/API** | Node.js (Express) | Handles all CRUD operations, business logic, and capacity checks |
 | **Database** | PostgreSQL (Supabase) | Supabase as hosted Postgres provider; CRUD queries go through the Node.js API |
-| **Authentication** | Supabase Auth | Handles sign-up, login, session management, JWT issuance. Node.js validates Supabase JWTs via middleware for role-based access. |
+| **Authentication** | Supabase Auth | Handles sign-up, login, session management, JWT issuance for both client and server. The Node API validates Supabase JWTs in middleware via `supabase.auth.getUser(token)` and reads `role` from the user's `app_metadata`. `users.id` mirrors `auth.uid()` so RLS policies can key off `auth.uid()` directly. |
 | **Build & Deploy** | EAS Build (Expo) | Generates iOS + Android binaries for App Store / Google Play |
 | **API Hosting** | Render | Hosts the Node.js Express server |
 
@@ -126,7 +126,8 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 | GET | `/programs` | Any | List all programs |
 | GET | `/locations` | Any | List all locations |
 | GET | `/time-slots?program_id=&mode=&location_id=` | Any | List available slots with capacity info |
-| POST | `/registrations` | Parent | Submit a registration |
+| POST | `/students` | Parent | Create a child for the authenticated parent. Body: `student_name` (req), `age` (req), `parent_name` (req), `parent_email` (req), `parent_phone` (req), `student_email`/`student_phone`/`description` (opt). `parent_id` is set server-side from `auth.uid()`. Returns 201 with the new row, 400 on missing required fields, 403 if not a parent. |
+| POST | `/registrations` | Parent | Submit a registration. Implemented via `supabase.rpc('register_with_capacity', ...)` so the capacity check + counter increment happen atomically inside Postgres. Returns 409 when `current_count >= max_capacity`. |
 | GET | `/registrations/my` | Parent | View own registrations + status |
 | GET | `/admin/students` | Admin | All students with program + parent info |
 | GET | `/admin/teachers` | Admin | All teachers with their courses + slots |

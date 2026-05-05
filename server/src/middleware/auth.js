@@ -1,13 +1,21 @@
-import { getAuth } from '@clerk/express';
+import { supabase } from '../config/supabase.js';
 
-export const requireAuth = (req, res, next) => {
-  const auth = getAuth(req);
-  
-  if (!auth.userId) {
-    return res.status(401).json({ 
-      error: 'Authentication required' 
-    });
+export const requireAuth = async (req, res, next) => {
+  const header = req.headers.authorization;
+  if (!header || !header.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Authentication required' });
   }
-  
-  next(); // Continue to next middleware/route
+  const token = header.slice('Bearer '.length);
+
+  const { data, error } = await supabase.auth.getUser(token);
+  if (error || !data?.user) {
+    return res.status(401).json({ error: 'Invalid or expired token' });
+  }
+
+  req.user = {
+    id: data.user.id,
+    email: data.user.email,
+    role: data.user.app_metadata?.role ?? null,
+  };
+  next();
 };

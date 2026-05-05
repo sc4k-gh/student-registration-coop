@@ -3,6 +3,7 @@ import { View, Text, TextInput, ScrollView, TouchableOpacity, Modal, StyleSheet,
 import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'; 
 import apiClient from '../../api/client.js'; 
+import { useAuth } from '../../auth/AuthProvider.js';
 import { Picker } from '@react-native-picker/picker';
  
 export default function RegistrationForm() {
@@ -24,6 +25,12 @@ export default function RegistrationForm() {
     const [selectedMode, setSelectedMode] = useState('');
     const [selectedLocation, setSelectedLocation] = useState('');
     const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+
+    // Submission state (inactive when NOT submitting):
+    const [submitting, setSubmitting] = useState(false);
+
+    // Set up parent authentication
+    const { user } = useAuth();
 
     //Set up navigation
     const navigation = useNavigation()
@@ -55,6 +62,12 @@ export default function RegistrationForm() {
     });
 
     const handleSubmit = async () => {
+        // Check is currently submitting.
+        // If submission is in progress, block submit button 
+        // to prevent double clicks (they may cause duplicate submissions).
+        if (submitting) return;
+        setSubmitting(true);
+        
       // Validate required fields; if any are empty, don't accept the submission.
       if (!studentName 
         || !studentAge 
@@ -76,6 +89,7 @@ export default function RegistrationForm() {
       try {
           // Add new student data to backend:
           const studentData = await apiClient.post('/students', {
+              parent_id: user.id, // Current logged in parent writing the registration
               student_name: studentName,
               student_email: studentEmail,
               student_phone: studentPhone,
@@ -87,7 +101,7 @@ export default function RegistrationForm() {
           });
 
           // Add new registration data to backend:
-          await apiClient.post('/registrations', {
+          const registrationData = await apiClient.post('/registrations', {
               student_id: studentData.id,
               program_id: selectedProgram,
               time_slot_id: selectedTimeSlot,
@@ -97,6 +111,8 @@ export default function RegistrationForm() {
           // Navigate back or clear form
       } catch (error) {
           alert('Error submitting registration: ' + error.message);
+      } finally {
+        setSubmitting(false); // After submission state ends, Re-enable the button.
       }
   };
         
@@ -229,7 +245,12 @@ export default function RegistrationForm() {
             <Text style={styles.label}>Mode *</Text>
                 <Picker
                     selectedValue={selectedMode}
-                    onValueChange={(itemValue) => setSelectedMode(itemValue)}>
+                    onValueChange={(itemValue) => {
+                    setSelectedMode(itemValue);
+                    if (itemValue === 'online') {
+                        setSelectedLocation(''); // ← Clear location when switching to online
+                    }
+                }}>
                     <Picker.Item label="Select mode" value="" />
                     <Picker.Item label="Online" value="online" />
                     <Picker.Item label="In-person" value="in-person" />
@@ -280,9 +301,13 @@ export default function RegistrationForm() {
 
         {/* FORM SUBMISSION BUTTON */}
         <TouchableOpacity
-            style={styles.submitButton}
-            onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Submit Registration</Text>
+            style={[styles.submitButton, submitting && {opacity: 0.5}]}
+            onPress={handleSubmit}
+            disabled={submitting}
+        >
+            <Text style={styles.submitButtonText}> 
+                {submitting ? 'Submitting...' : 'Submit Registration'}
+            </Text>
         </TouchableOpacity>
 
         {/* LANDING PAGE/RETURN BUTTON */}

@@ -5,7 +5,7 @@ import express from 'express';
 const router = express.Router();
 
 // All routes in this file require parent authentication.
-router.use(requireAuth, requireRole('sc4k:parent'));
+router.use(requireAuth, requireRole('parent'));
 
 // Create a new student (PARENT ONLY):
 router.post('/', async (req, res) => {
@@ -18,7 +18,7 @@ router.post('/', async (req, res) => {
         !req.body.parent_name ||
         !req.body.parent_email ||
         !req.body.parent_phone)
-            {return res.status(400).json({ error: 'Invalid input'})};
+            {return res.status(400).json({ error: 'Please fill in all required fields: student name, age, parent name, email, and phone'})};
 
 
   const { data, error } = await supabase
