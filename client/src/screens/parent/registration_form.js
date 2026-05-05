@@ -126,7 +126,7 @@ export default function RegistrationForm() {
             <Text style={styles.sectionTitle}>Student Information</Text>
 
             {/* Name */}
-            <Text style={styles.label}>Student Name *</Text>
+            <Text style={styles.label}>Student Name <Text style={styles.warninglabel}>*</Text></Text>
                 <TextInput
                     style={styles.input}
                     value={studentName}
@@ -158,7 +158,7 @@ export default function RegistrationForm() {
                     />
 
                 {/* Age */}
-                <Text style={styles.label}>Age *</Text>
+                <Text style={styles.label}>Age <Text style={styles.warninglabel}>*</Text></Text>
                     <TextInput
                         style={styles.input}
                         value={studentAge}
@@ -187,7 +187,7 @@ export default function RegistrationForm() {
             <Text style={styles.sectionTitle}>Parent Information</Text>
 
             {/* Name */}
-            <Text style={styles.label}>Parent Name *</Text>
+            <Text style={styles.label}>Parent Name <Text style={styles.warninglabel}>*</Text></Text>
                 <TextInput
                     style={styles.input}
                     value={parentName}
@@ -221,7 +221,7 @@ export default function RegistrationForm() {
 
             { /* PROGRAM PICKER: */}
             <View style={styles.section}>
-                <Text style={styles.label}>Program *</Text>
+                <Text style={styles.label}>Program <Text style={styles.warninglabel}>*</Text></Text>
                 {programsLoading ? (
                     <Text>Loading programs...</Text>
                 ) : (
@@ -242,7 +242,7 @@ export default function RegistrationForm() {
 
         { /* MODE PICKER: */}
         <View style={styles.section}>
-            <Text style={styles.label}>Mode *</Text>
+            <Text style={styles.label}>Mode <Text style={styles.warninglabel}>*</Text></Text>
                 <Picker
                     selectedValue={selectedMode}
                     onValueChange={(itemValue) => {
@@ -260,7 +260,7 @@ export default function RegistrationForm() {
         { /* LOCATION PICKER (only used if mode selected is "in-person"): */}
         {selectedMode === 'in-person' && (
             <View style={styles.section}>
-                    <Text style={styles.label}>Location *</Text>
+                    <Text style={styles.label}>Location <Text style={styles.warninglabel}>*</Text></Text>
                     <Picker
                         selectedValue={selectedLocation}
                         onValueChange={(itemValue) => setSelectedLocation(itemValue)}>
@@ -279,7 +279,7 @@ export default function RegistrationForm() {
         { /* TIME SLOT PICKER: */}
         {selectedProgram && selectedMode && (
             <View style={styles.section}>
-                <Text style={styles.label}>Time Slot *</Text>
+                <Text style={styles.label}>Time Slot <Text style={styles.warninglabel}>*</Text></Text>
                 {timeSlotsLoading ? (
                     <Text>Loading time slots...</Text>
                 ) : (
@@ -353,6 +353,11 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginBottom: 5,
         color: '#333',
+    },
+    warninglabel: {
+        fontSize: 14,
+        marginBottom: 5,
+        color: '#d32f2f',
     },
     input: {
         borderWidth: 1,

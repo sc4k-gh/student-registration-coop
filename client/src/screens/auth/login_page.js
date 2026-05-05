@@ -11,6 +11,11 @@ export default function Page() {
   const [password, setPassword] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
+  
+  const [showPassword, setShowPassword] = React.useState(false);
+  const toggleShowPassword = () => {
+    setShowPassword(!showPassword);
+  };
 
   const handleSubmit = async () => {
     setErrorMessage('');
@@ -45,9 +50,15 @@ export default function Page() {
         value={password}
         placeholder="Enter password"
         placeholderTextColor="#666666"
-        secureTextEntry
+        secureTextEntry={!showPassword}
         onChangeText={setPassword}
       />
+
+      <View style={styles.linkContainer}>
+        <Pressable onPress={() => toggleShowPassword()}>
+          <Text style={styles.secondaryButtonText}>Toggle password visibility</Text>
+        </Pressable>
+      </View>
 
       {!!errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
 

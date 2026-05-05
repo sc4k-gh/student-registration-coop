@@ -10,6 +10,7 @@ export default function Page() {
 
   const [emailAddress, setEmailAddress] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [passwordconfirm, setPasswordConfirm] = React.useState('');
   const [name, setName] = React.useState('');
   const [phoneNumber, setPhoneNumber] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
@@ -19,6 +20,16 @@ export default function Page() {
     setErrorMessage('');
     if (!name || !emailAddress || !password || !phoneNumber) {
       setErrorMessage('All fields are required');
+      return;
+    }
+    
+    if (password != passwordconfirm) {
+      setErrorMessage('Both password fields must match.')
+      return;
+    }
+    
+    if (password.length < 6) {
+      setErrorMessage('Password must be at least 6 characters long.')
       return;
     }
 
@@ -88,6 +99,16 @@ export default function Page() {
         placeholderTextColor="#666666"
         secureTextEntry
         onChangeText={setPassword}
+      />
+      
+      <Text style={styles.label}>Confirm password</Text>
+      <TextInput
+        style={styles.input}
+        value={passwordconfirm}
+        placeholder="Enter password"
+        placeholderTextColor="#666666"
+        secureTextEntry
+        onChangeText={setPasswordConfirm}
       />
 
       {!!errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
