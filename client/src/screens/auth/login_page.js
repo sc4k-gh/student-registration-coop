@@ -71,7 +71,7 @@ export default function Page() {
         onPress={handleSubmit}
         disabled={!emailAddress || !password || submitting}
       >
-        <Text style={styles.buttonText}>Continue</Text>
+        <Text style={styles.buttonText}>Sign in</Text>
       </Pressable>
 
       <View style={styles.linkContainer}>

@@ -128,7 +128,7 @@ export default function Page() {
       <View style={styles.linkContainer}>
         <Text>Already have an account? </Text>
         <Pressable onPress={() => navigation.navigate('Login')}>
-          <Text style={styles.secondaryButtonText}>Log in</Text>
+          <Text style={styles.secondaryButtonText}>Sign in</Text>
         </Pressable>
       </View>
 

@@ -6,17 +6,19 @@ import { useAuth } from '../auth/AuthProvider.js';
 export default function LandingPage() {
     const navigation = useNavigation();
     const { signOut, isSignedIn } = useAuth();
-
     return (
         <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             <Text>Student App</Text>
             <Text>Thank you for using the student registration app</Text>
 
             <View style={{ flexDirection: 'column', margin: 20, gap: 20 }}>
-                <Button
-                    title="Login"
-                    onPress={() => navigation.navigate("Login")}
-                />
+                
+                {!isSignedIn && (
+                    <Button
+                        title="Sign In"
+                        onPress={() => navigation.navigate("Login")}
+                    />
+                )}
 
                 <Button
                     title="Go to Dashboard"
