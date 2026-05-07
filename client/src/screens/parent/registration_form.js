@@ -69,19 +69,21 @@ export default function RegistrationForm() {
         setSubmitting(true);
         
       // Validate required fields; if any are empty, don't accept the submission.
-      if (!studentName 
-        || !studentAge 
-        || !parentName 
-        || !parentEmail 
-        || !parentPhone 
-        || !selectedProgram 
-        || !selectedMode 
+      if (!studentName
+        || !studentAge
+        || !parentName
+        || !parentEmail
+        || !parentPhone
+        || !selectedProgram
+        || !selectedMode
         ||!selectedTimeSlot) {
           alert('Please fill in all required fields');
+          setSubmitting(false); // Re-enable button after alert
           return;
       }
       if (selectedMode === 'in-person' && !selectedLocation) {
           alert('Please select a location for in-person mode');
+          setSubmitting(false); // Re-enable button after alert
           return;
       }
 
@@ -108,7 +110,8 @@ export default function RegistrationForm() {
           });
 
           alert('Registration submitted successfully!');
-          // Navigate back or clear form
+          // Navigate to dashboard once form is submitted.
+          navigation.navigate('Dashboard');
       } catch (error) {
           alert('Error submitting registration: ' + error.message);
       } finally {
@@ -197,7 +200,7 @@ export default function RegistrationForm() {
                 />
 
             { /* Email */}
-            <Text style={styles.label}>Parent Email</Text>
+            <Text style={styles.label}>Parent Email <Text style={styles.warninglabel}>*</Text></Text>
                 <TextInput
                     style={styles.input}
                     value={parentEmail} 
@@ -208,7 +211,7 @@ export default function RegistrationForm() {
                 />
                 
                 {/* Phone number */}
-                <Text style={styles.label}>Parent Phone</Text> 
+                <Text style={styles.label}>Parent Phone <Text style={styles.warninglabel}>*</Text></Text> 
                     <TextInput
                         style={styles.input}
                         value={parentPhone}
@@ -383,7 +386,7 @@ const styles = StyleSheet.create({
       borderRadius: 10,
       alignItems: 'center',
       marginTop: 20,
-      marginBottom: 30,
+      marginBottom: 20,
   },
   submitButtonText: {
       color: 'white',

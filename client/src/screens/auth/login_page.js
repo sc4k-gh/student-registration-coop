@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, Text, View, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../auth/AuthProvider.js';
 
 export default function Page() {
@@ -31,7 +31,7 @@ export default function Page() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Sign in</Text>
+      <Text style={styles.title}>Log in</Text>
 
       <Text style={styles.label}>Email address</Text>
       <TextInput
@@ -62,17 +62,15 @@ export default function Page() {
 
       {!!errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
 
-      <Pressable
-        style={({ pressed }) => [
-          styles.button,
-          (!emailAddress || !password || submitting) && styles.buttonDisabled,
-          pressed && styles.buttonPressed,
-        ]}
+      <TouchableOpacity
+        style={[styles.submitButton, submitting && {opacity: 0.5}]}
         onPress={handleSubmit}
-        disabled={!emailAddress || !password || submitting}
+        disabled={submitting}
       >
-        <Text style={styles.buttonText}>Continue</Text>
-      </Pressable>
+        <Text style={styles.buttonText}>
+          {submitting ? 'Submitting...' : 'Log In'}
+          </Text>
+      </TouchableOpacity>
 
       <View style={styles.linkContainer}>
         <Text>Don't have an account? </Text>
@@ -92,7 +90,7 @@ export default function Page() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, gap: 12 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
+  title: { fontSize: 24, fontWeight: 'bold', marginTop: 20, marginBottom: 8 },
   label: { fontWeight: '600', fontSize: 14 },
   input: {
     borderWidth: 1,
@@ -116,4 +114,17 @@ const styles = StyleSheet.create({
   secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
   linkContainer: { flexDirection: 'row', gap: 4, marginTop: 12, alignItems: 'center' },
   error: { color: '#d32f2f', fontSize: 12 },
+  submitButton: {
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
