@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, Modal, StyleSheet, Pressable } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, Modal, StyleSheet, Pressable, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'; 
 import apiClient from '../../api/client.js'; 
@@ -311,12 +311,13 @@ export default function RegistrationForm() {
         </TouchableOpacity>
 
         {/* LANDING PAGE/RETURN BUTTON */}
-        <View style={styles.linkContainer}>
-            <Pressable
-                onPress={() => navigation.navigate('Landing')}>
-                <Text style={styles.secondaryButtonText}>Back to landing page</Text>
-            </Pressable>
-        </View>
+        {Platform.OS!=='android' &&
+            <View>
+                    <Pressable style={[styles.linkContainer, { marginBottom: 100 }]} onPress={() => navigation.navigate('Landing')}>
+                        <Text style={styles.secondaryButtonText}>Back to landing page</Text>
+                    </Pressable>
+            </View>
+        }
         </ScrollView>
     );
 }
@@ -377,6 +378,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     alignItems: 'center',
     },
+    linkContainer: { 
+        flexDirection: 'row', 
+        gap: 4, 
+        marginTop: 12, 
+        alignItems: 'center' 
+    },
     submitButton: {
       backgroundColor: '#007AFF',
       padding: 15,
@@ -384,7 +391,7 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       marginTop: 20,
       marginBottom: 30,
-  },
+    },
   submitButtonText: {
       color: 'white',
       fontSize: 16,

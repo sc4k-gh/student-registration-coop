@@ -1,6 +1,6 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, Text, View, Platform } from 'react-native';
 import apiClient from '../../api/client.js';
 import { useAuth } from '../../auth/AuthProvider.js';
 
@@ -132,11 +132,12 @@ export default function Page() {
         </Pressable>
       </View>
 
-      <View style={styles.linkContainer}>
-        <Pressable onPress={() => navigation.navigate('Landing')}>
-          <Text style={styles.secondaryButtonText}>Back to landing page</Text>
-        </Pressable>
-      </View>
+      {Platform.OS!=='android' &&
+        <View style={styles.linkContainer}>
+          <Pressable onPress={() => navigation.navigate('Landing')}>
+            <Text style={styles.secondaryButtonText}>Back to landing page</Text>
+          </Pressable>
+        </View>}
     </View>
   );
 }
