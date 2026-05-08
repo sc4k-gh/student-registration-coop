@@ -23,6 +23,24 @@ export default function Page() {
       return;
     }
     
+    if (phoneNumber.length != 12 && phoneNumber.length != 10) {
+      setErrorMessage('Phone number must be formatted as either "xxx-xxx-xxxx" or "xxxxxxxxxx".')
+      return;
+    }
+
+    if (/^.+@.+\..+$/.test(emailAddress) == False) {
+      setErrorMessage('Invalid email formatting.')
+      return;
+    }
+
+    let tempphonenumber
+    if (/^\d{3}-\d{3}-\d{4}$/.test(phoneNumber)) {
+      tempphonenumber = phoneNumber;
+    }
+    else {
+      tempphonenumber = phoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
+    }
+
     if (password != passwordconfirm) {
       setErrorMessage('Both password fields must match.')
       return;
