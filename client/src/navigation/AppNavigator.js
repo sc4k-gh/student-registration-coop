@@ -12,6 +12,7 @@ import CoursesPage from '../screens/courses_page';
 import RegistrationForm from '../screens/parent/registration_form';
 import LoginPage from '../screens/auth/login_page';
 import SignUpPage from '../screens/auth/signup_page';
+import MyRegistrations from '../screens/parent/my_registrations';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -24,6 +25,7 @@ function MainApp() {
             <Drawer.Screen name="Teachers" component={TeachersPage} />
             <Drawer.Screen name="Courses" component={CoursesPage} />
             <Drawer.Screen name="Settings" component={SettingsPage} />
+            <Drawer.Screen name="My Registrations" component={MyRegistrations} />
         </Drawer.Navigator>
     );
 }

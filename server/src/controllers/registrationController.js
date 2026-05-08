@@ -3,7 +3,7 @@ import { supabase } from '../config/supabase.js';
 export const listMine = async (req, res) => {
   const { data, error } = await supabase
     .from('students')
-    .select('*, registrations(*)')
+    .select('*, registrations(*, programs(*), time_slots(*))')
     .eq('parent_id', req.user.id);
 
   if (error) return res.status(500).json({ error: error.message });
