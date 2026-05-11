@@ -1,9 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { View, Text, StyleSheet, Pressable } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 
 export default function DashboardScreen() {
+  const navigation = useNavigation();
   // Fetch students, teachers, and programs from the backend.
   const { data: students, isLoading: studentsLoading } = useQuery({
     queryKey: ['students'],
@@ -19,6 +21,8 @@ export default function DashboardScreen() {
     queryKey: ['programs'],
     queryFn: () => apiClient.get('/programs'),
   });
+
+  const [emailAddress, setEmailAddress] = React.useState('');
 
   if (studentsLoading || teachersLoading || programsLoading) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
@@ -41,6 +45,12 @@ export default function DashboardScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Active Courses</Text>
         <Text style={styles.cardValue}>{programs?.filter(p => p.status === 'active').length ?? '-'}</Text>
+      </View>
+
+      <View style={styles.linkContainer}>
+        <Pressable onPress={() => navigation.navigate('Landing')}>
+        <Text style={styles.secondaryButtonText}>Back to landing page</Text>
+        </Pressable>
       </View>
     </View>
   );
@@ -78,4 +88,6 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginTop: 5,
     },
+    secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
+    linkContainer: { flexDirection: 'row', gap: 4, marginTop: 12, alignItems: 'center' },
 });
