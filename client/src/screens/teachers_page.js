@@ -1,17 +1,28 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Pressable, TextInput } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 
 export default function TeachersPage() {
+    const [studentsQuery, setStudentsQuery] = React.useState('');
+    const [Search, setSearch] = React.useState('');
+    
     // Fetch all teachers, with their name, courses, age, and time slots, from the backend.
     const { data, isLoading, isError } = useQuery({
         queryKey: ['teachers'],
         queryFn: () => apiClient.get('/admin/teachers'),
     });
 
-    if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
-    if (isError) return <View style={styles.container}><Text>Error loading teachers.</Text></View>;
+    //Fetch students studying under a given teacher
+    const { data: searchData, isLoading: searchLoading, refetch } = useQuery({
+        queryKey: ['studentssearch', Search],
+        queryFn: () => apiClient.get(`/admin/teachers/${Search}/students`),
+        enabled: !!Search,
+    });
+
+    function searchButton() {
+        setSearch(studentsQuery);
+    }
 
     return (
         <View style={styles.container}>
@@ -40,6 +51,22 @@ export default function TeachersPage() {
                     );
                 }}
             />
+            <Text style={styles.label}>Students studying under</Text>
+                        <TextInput
+                            style={styles.input}
+                            autoCapitalize="none"
+                            value={studentsQuery}
+                            placeholder="Enter teacher name"
+                            placeholderTextColor="#666666"
+                            onChangeText={setStudentsQuery}
+                          />
+                        <Pressable 
+                        style={({ pressed }) => [
+                            styles.button,
+                            pressed && styles.buttonPressed]}
+                            onPress={searchButton}>
+                                <Text style={styles.buttonText}>Search</Text>
+                        </Pressable>
         </View>
     );
 };
@@ -72,4 +99,26 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginBottom: 5,
     },
+    label: { fontWeight: '600', fontSize: 14 },
+    input: {
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        padding: 12,
+        fontSize: 16,
+        backgroundColor: '#fff',
+    },
+    button: {
+        backgroundColor: '#0a7ea4',
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 8,
+        marginBottom: 50
+    },
+    buttonPressed: { opacity: 0.7 },
+    buttonDisabled: { opacity: 0.5 },
+    buttonText: { color: '#fff', fontWeight: '600' },
+    secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
 });
