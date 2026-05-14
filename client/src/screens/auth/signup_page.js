@@ -28,16 +28,13 @@ export default function Page() {
       return;
     }
 
-    if (/^.+@.+\..+$/.test(emailAddress) == False) {
+    if (/^\S+@\S+\.\S+$/.test(emailAddress) == False) {
       setErrorMessage('Invalid email formatting.')
       return;
     }
 
-    let tempphonenumber
-    if (/^\d{3}-\d{3}-\d{4}$/.test(phoneNumber)) {
-      tempphonenumber = phoneNumber;
-    }
-    else {
+    let tempphonenumber = phoneNumber;
+    if (!/^\d{3}-\d{3}-\d{4}$/.test(phoneNumber)) {
       tempphonenumber = phoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
     }
 
@@ -56,7 +53,7 @@ export default function Page() {
       name,
       emailAddress,
       password,
-      phone_number: phoneNumber,
+      phone_number: tempphonenumber,
     });
 
     if (result?.error) {

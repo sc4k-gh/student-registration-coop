@@ -4,28 +4,22 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 
 export default function StudentPage() {
-    const [studentQuery, setStudentQuery] = React.useState('');
     const [Search, setSearch] = React.useState('');
 
     // Fetch all students, with their name, enrolled program, age, and parent contacts, from the backend.
-    const { data: students, isLoading: isLoadingStudents, isError: isErrorStudents } = useQuery({
+    const { data, isLoading, isError } = useQuery({
         queryKey: ['students'],
         queryFn: () => apiClient.get('/admin/students'),
     });
 
-    const { data: locations, isLoading: isLoadingLocations, isError: isErrorLocations, error: locationsError } = useQuery({
-        queryKey: ['locations'],
-        queryFn: () => apiClient.get('/locations'),
-    });
+    if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
+    if (isError) return <View style={styles.container}><Text>Error loading students.</Text></View>;
 
-    console.log(locations)
-    console.log(isErrorLocations)
-    console.log('locations error:', locationsError)
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Students</Text>
             <FlatList
-                data={students}
+                data={data}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.card}>
@@ -35,15 +29,6 @@ export default function StudentPage() {
                         <Text>Parent: {item.parent_name}</Text>
                         <Text>Parent Email: {item.parent_email}</Text>
                         <Text>Parent Phone: {item.parent_phone}</Text>
-                    </View>
-                )}
-            />
-            <FlatList
-                data={locations}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                    <View style={styles.card}>
-                        <Text style={styles.name}>{item.student_name}</Text>
                     </View>
                 )}
             />
@@ -78,5 +63,4 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: 'bold',
     },
-    label: { fontWeight: '600', fontSize: 14 },
 });

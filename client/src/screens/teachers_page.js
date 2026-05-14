@@ -20,15 +20,38 @@ export default function TeachersPage() {
         enabled: !!Search,
     });
 
+    const searchQuery = () => {
+        return data.filter(teacher => teacher.name.toLowerCase().includes(studentsQuery.toLowerCase()))}
+    
     function searchButton() {
         setSearch(studentsQuery);
     }
 
+    if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
+    if (isError) return <View style={styles.container}><Text>Error loading teachers.</Text></View>;
+
+    
     return (
         <View style={styles.container}>
+            <Text style={styles.label}>Search by teacher name</Text>
+            <TextInput
+                style={styles.input}
+                autoCapitalize="none"
+                value={studentsQuery}
+                placeholder="Enter teacher name"
+                placeholderTextColor="#666666"
+                onChangeText={setStudentsQuery}
+            />
+            <Pressable 
+                style={({ pressed }) => [
+                    styles.button,
+                    pressed && styles.buttonPressed]}
+                    onPress={searchButton}>
+                    <Text style={styles.buttonText}>Search</Text>
+            </Pressable>
             <Text style={styles.header}>Teachers</Text>
             <FlatList
-                data={data}
+                data={searchQuery}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => {
                     const programs = item.time_slots
@@ -51,22 +74,6 @@ export default function TeachersPage() {
                     );
                 }}
             />
-            <Text style={styles.label}>Students studying under</Text>
-                        <TextInput
-                            style={styles.input}
-                            autoCapitalize="none"
-                            value={studentsQuery}
-                            placeholder="Enter teacher name"
-                            placeholderTextColor="#666666"
-                            onChangeText={setStudentsQuery}
-                          />
-                        <Pressable 
-                        style={({ pressed }) => [
-                            styles.button,
-                            pressed && styles.buttonPressed]}
-                            onPress={searchButton}>
-                                <Text style={styles.buttonText}>Search</Text>
-                        </Pressable>
         </View>
     );
 };
