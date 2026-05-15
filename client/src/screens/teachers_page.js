@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 
 export default function TeachersPage() {
-    const [studentsQuery, setStudentsQuery] = React.useState('');
+    const [teachersQuery, setTeachersQuery] = React.useState('');
     const [Search, setSearch] = React.useState('');
     
     // Fetch all teachers, with their name, courses, age, and time slots, from the backend.
@@ -13,23 +13,19 @@ export default function TeachersPage() {
         queryFn: () => apiClient.get('/admin/teachers'),
     });
 
-    //Fetch students studying under a given teacher
-    const { data: searchData, isLoading: searchLoading, refetch } = useQuery({
-        queryKey: ['studentssearch', Search],
-        queryFn: () => apiClient.get(`/admin/teachers/${Search}/students`),
-        enabled: !!Search,
-    });
-
     const searchQuery = () => {
-        return data.filter(teacher => teacher.name.toLowerCase().includes(studentsQuery.toLowerCase()))}
+        if (!data) return [];
+        if (Search !== '')
+            return data.filter(item => item.name.toLowerCase().includes(Search.toLowerCase()));
+        return data;
+    };
     
     function searchButton() {
-        setSearch(studentsQuery);
-    }
+        setSearch(teachersQuery);
+    };
 
     if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
     if (isError) return <View style={styles.container}><Text>Error loading teachers.</Text></View>;
-
     
     return (
         <View style={styles.container}>
@@ -37,10 +33,10 @@ export default function TeachersPage() {
             <TextInput
                 style={styles.input}
                 autoCapitalize="none"
-                value={studentsQuery}
+                value={teachersQuery}
                 placeholder="Enter teacher name"
                 placeholderTextColor="#666666"
-                onChangeText={setStudentsQuery}
+                onChangeText={setTeachersQuery}
             />
             <Pressable 
                 style={({ pressed }) => [
@@ -51,7 +47,7 @@ export default function TeachersPage() {
             </Pressable>
             <Text style={styles.header}>Teachers</Text>
             <FlatList
-                data={searchQuery}
+                data={searchQuery()}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => {
                     const programs = item.time_slots
@@ -122,7 +118,7 @@ const styles = StyleSheet.create({
         borderRadius: 8,
         alignItems: 'center',
         marginTop: 8,
-        marginBottom: 50
+        marginBottom: 8
     },
     buttonPressed: { opacity: 0.7 },
     buttonDisabled: { opacity: 0.5 },
