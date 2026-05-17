@@ -1,5 +1,7 @@
 import express from 'express';
 import {
+  summary,
+  query,
   listStudents,
   listTeachers,
   listTeacherStudents,
@@ -18,6 +20,8 @@ const router = express.Router();
 
 router.use(requireAuth, requireRole('admin'));
 
+router.get('/summary', summary);
+router.get('/query', query);
 router.get('/students', listStudents);
 router.get('/teachers', listTeachers);
 router.get('/teachers/:id/students', listTeacherStudents);

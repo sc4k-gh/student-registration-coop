@@ -1,21 +1,69 @@
 import { supabase } from '../config/supabase.js';
+import { isValidEmail, pageRange, PAGE_SIZE } from '../utils/validation.js';
 
-const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
-
-export const listStudents = async (_req, res) => {
-  const { data, error } = await supabase
-    .from('students')
-    .select('*, registrations (*, programs (*))');
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+const fail = (res, where, error) => {
+  console.error(`${where} failed`, error);
+  return res.status(500).json({ error: 'Internal server error' });
 };
 
-export const listTeachers = async (_req, res) => {
+// Admin home: enrolled (approved) + pending counts.
+export const summary = async (_req, res) => {
+  const approved = await supabase
+    .from('registrations')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'approved');
+  if (approved.error) return fail(res, 'admin.summary approved', approved.error);
+
+  const pending = await supabase
+    .from('registrations')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'pending');
+  if (pending.error) return fail(res, 'admin.summary pending', pending.error);
+
+  res.json({
+    enrolled_count: approved.count ?? 0,
+    pending_count: pending.count ?? 0,
+  });
+};
+
+// Dynamic filter over registrations. Only whitelisted axes are honored.
+export const query = async (req, res) => {
+  const { page, from, to } = pageRange(req.query.page);
+
+  let q = supabase
+    .from('registrations')
+    .select(
+      '*, students (*), time_slots (*, programs (*), teachers (*), locations (*))',
+    );
+
+  if (req.query.program_id) q = q.eq('program_id', req.query.program_id);
+  if (req.query.mode) q = q.eq('time_slots.mode', req.query.mode);
+  if (req.query.teacher_id) q = q.eq('time_slots.teacher_id', req.query.teacher_id);
+  if (req.query.location_id) q = q.eq('time_slots.location_id', req.query.location_id);
+
+  const { data, error } = await q.range(from, to);
+  if (error) return fail(res, 'admin.query', error);
+  res.json({ data, page, page_size: PAGE_SIZE });
+};
+
+export const listStudents = async (req, res) => {
+  const { page, from, to } = pageRange(req.query.page);
+  const { data, error } = await supabase
+    .from('students')
+    .select('*, registrations (*, programs (*))')
+    .range(from, to);
+  if (error) return fail(res, 'admin.listStudents', error);
+  res.json({ data, page, page_size: PAGE_SIZE });
+};
+
+export const listTeachers = async (req, res) => {
+  const { page, from, to } = pageRange(req.query.page);
   const { data, error } = await supabase
     .from('teachers')
-    .select('*, time_slots (*, programs (*))');
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+    .select('*, time_slots (*, programs (*))')
+    .range(from, to);
+  if (error) return fail(res, 'admin.listTeachers', error);
+  res.json({ data, page, page_size: PAGE_SIZE });
 };
 
 export const listTeacherStudents = async (req, res) => {
@@ -25,7 +73,7 @@ export const listTeacherStudents = async (req, res) => {
     .eq('teacher_id', req.params.id)
     .order('day_of_week', { ascending: true });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return fail(res, 'admin.listTeacherStudents', error);
   res.json(data);
 };
 
@@ -42,7 +90,7 @@ export const createTeacher = async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return fail(res, 'admin.createTeacher', error);
   res.status(201).json(data);
 };
 
@@ -61,7 +109,7 @@ export const createProgram = async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return fail(res, 'admin.createProgram', error);
   res.status(201).json(data);
 };
 
@@ -78,7 +126,7 @@ export const updateProgram = async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return fail(res, 'admin.updateProgram', error);
   res.json(data);
 };
 
@@ -89,7 +137,7 @@ export const getProgram = async (req, res) => {
     .eq('id', req.params.id)
     .maybeSingle();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return fail(res, 'admin.getProgram', error);
   if (!data) return res.status(404).json({ error: 'Program not found' });
   res.json(data);
 };
@@ -127,18 +175,20 @@ export const createTimeSlot = async (req, res) => {
     .select()
     .single();
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) return fail(res, 'admin.createTimeSlot', error);
   res.status(201).json(data);
 };
 
-export const listPendingRegistrations = async (_req, res) => {
+export const listPendingRegistrations = async (req, res) => {
+  const { page, from, to } = pageRange(req.query.page);
   const { data, error } = await supabase
     .from('registrations')
     .select('*, time_slots (*, students (*), programs (name))')
-    .eq('status', 'pending');
+    .eq('status', 'pending')
+    .range(from, to);
 
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  if (error) return fail(res, 'admin.listPendingRegistrations', error);
+  res.json({ data, page, page_size: PAGE_SIZE });
 };
 
 export const reviewRegistration = async (req, res) => {
@@ -147,17 +197,16 @@ export const reviewRegistration = async (req, res) => {
     return res.status(400).json({ error: 'status must be pending, approved, or rejected' });
   }
 
-  const { data, error } = await supabase
-    .from('registrations')
-    .update({
-      status,
-      reviewed_at: new Date().toISOString(),
-      reviewed_by: req.user.id,
-    })
-    .eq('id', req.params.id)
-    .select()
-    .single();
+  // Atomic: status change + capacity release on reject (architecture.md §5).
+  const { data, error } = await supabase.rpc('review_registration', {
+    p_registration_id: req.params.id,
+    p_status: status,
+    p_reviewer_id: req.user.id,
+  });
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    if (error.code === 'P0002') return res.status(404).json({ error: 'Registration not found' });
+    return fail(res, 'admin.reviewRegistration', error);
+  }
   res.json(data);
 };

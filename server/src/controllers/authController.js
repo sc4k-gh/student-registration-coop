@@ -1,4 +1,10 @@
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAnon } from '../config/supabase.js';
+import { isValidEmail } from '../utils/validation.js';
+
+// Role is derived from the email domain (architecture.md §1). Server-only.
+const ADMIN_DOMAIN = 'sc4k.ca';
+const roleForEmail = (email) =>
+  email.trim().toLowerCase().endsWith(`@${ADMIN_DOMAIN}`) ? 'admin' : 'parent';
 
 export const signup = async (req, res) => {
   const { emailAddress, password, name, phone_number } = req.body ?? {};
@@ -8,12 +14,17 @@ export const signup = async (req, res) => {
       .status(400)
       .json({ error: 'emailAddress, password, name, and phone_number are required' });
   }
+  if (!isValidEmail(emailAddress)) {
+    return res.status(400).json({ error: 'A valid emailAddress is required' });
+  }
+
+  const role = roleForEmail(emailAddress);
 
   const { data: created, error: createErr } = await supabase.auth.admin.createUser({
     email: emailAddress,
     password,
     email_confirm: true,
-    app_metadata: { role: 'parent' },
+    app_metadata: { role },
     user_metadata: { name, phone_number },
   });
   if (createErr) {
@@ -25,25 +36,28 @@ export const signup = async (req, res) => {
   const { error: insertErr } = await supabase.from('users').insert({
     id: authUser.id,
     email: emailAddress,
-    password_hash: 'supabase_managed',
-    role: 'parent',
+    role,
     name,
     phone_number,
   });
   if (insertErr) {
     await supabase.auth.admin.deleteUser(authUser.id);
-    return res.status(500).json({ error: insertErr.message });
+    console.error('signup: users insert failed', insertErr);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 
-  const { data: session, error: signInErr } = await supabase.auth.signInWithPassword({
+  const { data: session, error: signInErr } = await supabaseAnon.auth.signInWithPassword({
     email: emailAddress,
     password,
   });
   if (signInErr) {
-    return res.status(500).json({ error: signInErr.message });
+    console.error('signup: post-create sign-in failed', signInErr);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 
-  res.status(201).json({ user: { id: authUser.id, email: emailAddress, name }, session: session.session });
+  res
+    .status(201)
+    .json({ user: { id: authUser.id, email: emailAddress, name }, session: session.session });
 };
 
 export const login = async (req, res) => {
@@ -52,7 +66,7 @@ export const login = async (req, res) => {
     return res.status(400).json({ error: 'emailAddress and password are required' });
   }
 
-  const { data, error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabaseAnon.auth.signInWithPassword({
     email: emailAddress,
     password,
   });
@@ -61,20 +75,4 @@ export const login = async (req, res) => {
   }
 
   res.json({ user: data.user, session: data.session });
-};
-
-export const setupPassword = async (req, res) => {
-  if (req.user?.role !== 'admin') {
-    return res.status(403).json({ error: 'Forbidden' });
-  }
-  const { password } = req.body ?? {};
-  if (!password) {
-    return res.status(400).json({ error: 'password is required' });
-  }
-
-  const { error } = await supabase.auth.admin.updateUserById(req.user.id, { password });
-  if (error) {
-    return res.status(500).json({ error: error.message });
-  }
-  res.json({ success: true });
 };

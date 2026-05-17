@@ -17,7 +17,14 @@ if (!port) {
 
 export const app = express();
 
-app.use(cors());
+// CORS is browser-only; the native Expo app doesn't need it. Re-enable for
+// Expo web or a future browser admin UI.
+// app.use(
+//   cors({
+//     origin: process.env.CORS_ORIGIN?.split(',').map((o) => o.trim()) ?? false,
+//     credentials: true,
+//   }),
+// );
 app.use(express.json());
 
 app.use('/auth', auth);
@@ -30,7 +37,7 @@ app.use('/students', students);
 
 app.use((err, _req, res, _next) => {
   console.error(err);
-  res.status(500).json({ error: err.message });
+  res.status(500).json({ error: 'Internal server error' });
 });
 
 const entry = process.argv[1]?.replace(/\\/g, '/');

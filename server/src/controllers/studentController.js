@@ -1,37 +1,34 @@
 import { supabase } from '../config/supabase.js';
+import { isValidEmail } from '../utils/validation.js';
 
-export const create = async(req, res) => {
-    // Check for required fields.
-    // Students can't be created if any of these are missing.
-    if (
-        !req.body.parent_id || 
-        !req.body.student_name || 
-        !req.body.age || 
-        !req.body.parent_name ||
-        !req.body.parent_email ||
-        !req.body.parent_phone
-    )
-        {return res.status(400).json(
-            { error: 'Please fill in all required fields: student name, age, parent name, email, and phone'}
-        )};
+export const create = async (req, res) => {
+  const { student_name, age, parent_email, parent_phone } = req.body ?? {};
 
+  if (!student_name || !age || !parent_email || !parent_phone) {
+    return res.status(400).json({
+      error: 'student_name, age, parent_email, and parent_phone are required',
+    });
+  }
+  if (!isValidEmail(parent_email)) {
+    return res.status(400).json({ error: 'A valid parent_email is required' });
+  }
 
-    const { data, error } = await supabase
+  // parent_id is the authenticated parent — never trust the client for this.
+  const { data, error } = await supabase
     .from('students')
     .insert({
-        'parent_id': req.body.parent_id,
-        'student_name': req.body.student_name,
-        'student_email': req.body.student_email,
-        'student_phone': req.body.student_phone,
-        'age': req.body.age,
-        'description': req.body.description,
-        'parent_name': req.body.parent_name,
-        'parent_email': req.body.parent_email,
-        'parent_phone': req.body.parent_phone
+      parent_id: req.user.id,
+      student_name,
+      age,
+      parent_email,
+      parent_phone,
     })
     .select()
     .single();
 
-    if (error) {return res.status(500).json({ error: error.message })}
-    else {res.json(data)};
+  if (error) {
+    console.error('students.create failed', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+  res.status(201).json(data);
 };

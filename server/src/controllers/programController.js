@@ -6,6 +6,9 @@ export const list = async (req, res) => {
     .select('*, time_slots (*)')
     .eq('status', 'active');
 
-  if (error) return res.status(500).json({ error: error.message });
+  if (error) {
+    console.error('programs.list failed', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
   res.json(data);
 };

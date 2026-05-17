@@ -10,11 +10,16 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 ### Authentication
 - Role-based auth: **Admin** and **Parent** for POC
 - Future roles: Student, Faculty (not in POC)
-- Admin: email pre-seeded via DB seed script; admin sets their own password on first login (invite/setup flow)
-- Parent: sign-up / login flow
+- **Role is derived from the email domain** at signup: emails on the **`sc4k.ca`** domain → `admin`; any other domain → `parent`. Single signup/login flow; no separate admin login, no invite/setup-password step. The mechanism is invisible to users.
+
+#### Role Routing
+1. **Signup (server):** the auth controller inspects the email domain and sets `app_metadata.role` (`admin` for `@sc4k.ca`, else `parent`) when creating the Supabase user via the service-role key. `app_metadata` is server-only — clients cannot set or alter it.
+2. **Token:** Supabase mints the JWT with `role` embedded in `app_metadata`; `requireAuth` reads it on every request and `roleGuard` enforces it.
+3. **Redirect (client):** after login the app reads `role` from the session and routes `admin` → admin dashboard, `parent` → registration form. This is a local token read with no extra round trip, so it is transparent and immediate to the user.
 
 ### Admin Features
-- **Dynamic dashboard** with multiple tabular views (each is a separate screen/tab):
+- **Home view:** count of currently-enrolled students + count of pending/received registrations awaiting approval.
+- **Dynamic filtering:** admin can view any DB columns combined arbitrarily at any time (preset axes: program / teacher / location-in-person / online). The tabular views below are default presets, not the only views:
 
 | View | Data Shown | Query Path |
 |------|-----------|------------|
@@ -30,18 +35,23 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 - Register one or more children
 - Registration form per child:
   - Student name *(required)*
-  - Student email *(optional)*
-  - Student phone number *(optional)*
-  - Age *(required)*
-  - Description about the student *(optional)*
-  - Parent name *(required)*
   - Parent email *(required)*
   - Parent phone number *(required)*
+  - Age *(required)*
   - Program selection *(required)*
   - Mode: Online / In-person (dropdown) *(required)*
     - If in-person → select location (dropdown)
-  - Calendar picker (Mon–Sun): choose from **available fixed time slots** filtered by program + mode + location
-    - Slots that are full (5/5) are shown as unavailable
+  - Selected time slot, filtered by program + mode + location
+    - Slots that are full (5/5) are not shown
+  - Selected date for the first class *(required)*
+
+### Cascading Selection Logic
+The form is strictly dependent — each step filters the next:
+1. Select **program** →
+2. show **modes** available for that program →
+3. (if in-person) show **locations** for that program/mode →
+4. show the **next available calendar date(s)** →
+5. show **available time slots** for that date (slots at 5/5 are hidden).
 
 ### Scheduling & Capacity
 - Admin pre-defines fixed time slots per program, per day, per mode/location
@@ -61,9 +71,9 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 |---|---|
 | **Platform** | iOS + Android (React Native) |
 | **Availability** | Standard — single-region deployment acceptable for POC |
-| **Latency** | < 500ms for API responses |
-| **Security** | JWT-based auth, HTTPS, password hashing (bcrypt), role-based access control |
-| **Scalability** | POC scale (~100s of users); schema designed to scale later |
+| **Latency** | ≤ 200ms for database queries |
+| **Security** | JWT-based auth, HTTPS, Supabase-managed auth (no app-side bcrypt), role-based access control |
+| **Scalability** | 100 MAU + ~30 concurrent users; schema designed to scale later |
 | **Data Integrity** | Capacity checks must be atomic to prevent overbooking |
 
 ---
@@ -84,51 +94,74 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 
 ## 4. High-Level Design
 
+```mermaid
+graph TD
+    App["React Native App (Expo)<br/>iOS + Android"]
+    RQ["React Query<br/>(client cache + fetch)"]
+    API["Express API on Render"]
+    MW["requireAuth + roleGuard<br/>middleware"]
+    AuthC["auth controller<br/>signup / login"]
+    RegC["registrations controller"]
+    AdminC["admin controller<br/>summary / queue / dynamic query"]
+    ReadC["programs / locations / time-slots<br/>controllers"]
+    SAuth["Supabase Auth<br/>(JWT, app_metadata.role)"]
+    RPC["register_with_capacity()<br/>Postgres function"]
+    DB[("Supabase Postgres<br/>users, students, programs, locations,<br/>teachers, time_slots, registrations")]
+
+    App -->|"manages calls via"| RQ
+    RQ -->|"HTTPS / REST"| API
+    API --> MW
+    MW -->|"verify JWT"| SAuth
+    MW --> AuthC
+    MW --> RegC
+    MW --> AdminC
+    MW --> ReadC
+    AuthC -->|"create user, derive role from email domain"| SAuth
+    RegC -->|"RPC"| RPC
+    RPC -->|"capacity check + insert (atomic)"| DB
+    AdminC -->|"SQL"| DB
+    ReadC -->|"SQL (capacity-filtered slots)"| DB
+    AuthC -->|"SQL"| DB
 ```
-┌─────────────────────────────────────────────────┐
-│              Mobile App (React Native)           │
-│         iOS + Android                            │
-│  ┌───────────┐  ┌───────────┐  ┌──────────────┐ │
-│  │  Auth      │  │  Parent   │  │  Admin       │ │
-│  │  Screens   │  │  Screens  │  │  Screens     │ │
-│  └───────────┘  └───────────┘  └──────────────┘ │
-└────────────────────┬────────────────────────────┘
-                     │ HTTPS / REST
-                     ▼
-┌─────────────────────────────────────────────────┐
-│              API Server (Node.js / Express)        │
-│                                                   │
-│  ┌──────────┐ ┌──────────────┐ ┌──────────────┐ │
-│  │ Auth      │ │ Registration │ │ Admin        │ │
-│  │ Module    │ │ Module       │ │ Module       │ │
-│  │ (JWT)     │ │ (capacity    │ │ (CRUD +      │ │
-│  │           │ │  checks)     │ │  approvals)  │ │
-│  └──────────┘ └──────────────┘ └──────────────┘ │
-│                                                   │
-│  Middleware: Auth guard, Role guard, Validation   │
-└────────────────────┬────────────────────────────┘
-                     │
-                     ▼
-┌─────────────────────────────────────────────────┐
-│        Supabase (PostgreSQL — DB only)              │
-│  users, students, programs, locations,              │
-│  teachers, time_slots, registrations                │
-└─────────────────────────────────────────────────┘
+
+### Critical Flow — Parent Registration (capacity-checked)
+
+```mermaid
+sequenceDiagram
+    participant App as React Native App
+    participant API as Express API
+    participant MW as Auth/Role MW
+    participant RPC as register_with_capacity()
+    participant DB as Postgres
+
+    App->>API: POST /registrations (JWT, student_id, time_slot_id, first_class_date)
+    API->>MW: validate JWT + role=parent
+    MW-->>API: ok (req.user.id)
+    API->>RPC: rpc(register_with_capacity)
+    RPC->>DB: SELECT slot FOR UPDATE
+    alt current_count >= max_capacity
+        RPC-->>API: raise P0001
+        API-->>App: 409 Time slot is full
+    else capacity available
+        RPC->>DB: INSERT registration + increment current_count
+        RPC-->>API: registration row
+        API-->>App: 201 Created
+    end
 ```
 
 ### API Endpoints (Key)
 
 | Method | Endpoint | Role | Description |
 |--------|----------|------|-------------|
-| POST | `/auth/signup` | Public | Parent sign-up |
-| POST | `/auth/setup-password` | Admin | Admin sets password on first login (email must be pre-seeded) |
-| POST | `/auth/login` | Public | Login (returns JWT) |
+| POST | `/auth/signup` | Public | Sign-up; role auto-derived from email domain |
+| POST | `/auth/login` | Public | Login (returns JWT); client routes by role |
 | GET | `/programs` | Any | List all programs |
 | GET | `/locations` | Any | List all locations |
-| GET | `/time-slots?program_id=&mode=&location_id=` | Any | List available slots with capacity info |
-| POST | `/students` | Parent | Create a child for the authenticated parent. Body: `student_name` (req), `age` (req), `parent_name` (req), `parent_email` (req), `parent_phone` (req), `student_email`/`student_phone`/`description` (opt). `parent_id` is set server-side from `auth.uid()`. Returns 201 with the new row, 400 on missing required fields, 403 if not a parent. |
-| POST | `/registrations` | Parent | Submit a registration. Implemented via `supabase.rpc('register_with_capacity', ...)` so the capacity check + counter increment happen atomically inside Postgres. Returns 409 when `current_count >= max_capacity`. |
+| GET | `/time-slots?program_id=&mode=&location_id=&date=` | Any | Available slots; **excludes slots at capacity (≥5)**; supports next-available-date logic |
+| POST | `/students` | Parent | Create a child for the authenticated parent. Body: `student_name` (req), `age` (req), `parent_email` (req), `parent_phone` (req). `parent_id` is set server-side from `auth.uid()`. Returns 201 with the new row, 400 on missing required fields, 403 if not a parent. *(Note: current code deviates — see backend-report.md C-1; fix deferred to code phase.)* |
+| POST | `/registrations` | Parent | Submit a registration (incl. `first_class_date`). Implemented via `supabase.rpc('register_with_capacity', ...)` so the capacity check + counter increment happen atomically inside Postgres. Returns 409 when `current_count >= max_capacity`. |
 | GET | `/registrations/my` | Parent | View own registrations + status |
+| GET | `/admin/summary` | Admin | Home view: currently-enrolled count + pending count |
 | GET | `/admin/students` | Admin | All students with program + parent info |
 | GET | `/admin/teachers` | Admin | All teachers with their courses + slots |
 | GET | `/admin/teachers/:id/students` | Admin | Students under a specific teacher, by day, with contact details |
@@ -138,6 +171,7 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 | POST | `/admin/programs` | Admin | Create program |
 | POST | `/admin/time-slots` | Admin | Create time slot |
 | POST | `/admin/teachers` | Admin | Add teacher |
+| GET | `/admin/query` (dynamic) | Admin | Filterable view over arbitrary combinable columns; preset axes: program / teacher / location-in-person / online |
 
 ---
 
@@ -148,7 +182,7 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 |--------|------|-------------|-------|
 | id | UUID | PK | |
 | email | VARCHAR(255) | UNIQUE, NOT NULL | Login email |
-| password_hash | VARCHAR(255) | NOT NULL | bcrypt |
+| (password) | — | — | Managed by Supabase Auth; no app-side `password_hash` column |
 | role | ENUM('admin','parent') | NOT NULL | Expandable later |
 | name | VARCHAR(255) | NOT NULL | |
 | phone_number | VARCHAR(20) | NULL | Required for parents |
@@ -161,11 +195,7 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 | id | UUID | PK | |
 | parent_id | UUID | FK → users.id, NOT NULL | |
 | student_name | VARCHAR(255) | NOT NULL | **Required** |
-| student_email | VARCHAR(255) | NULL | Optional |
-| student_phone | VARCHAR(20) | NULL | Optional |
 | age | INT | NOT NULL | **Required** |
-| description | TEXT | NULL | About the student |
-| parent_name | VARCHAR(255) | NOT NULL | **Required** (denormalized for form) |
 | parent_email | VARCHAR(255) | NOT NULL | **Required** |
 | parent_phone | VARCHAR(20) | NOT NULL | **Required** |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT NOW | |
@@ -194,8 +224,6 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 | address | VARCHAR(500) | NULL | |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT NOW | |
 
-> Small fixed list. No `is_active` field per user request.
-
 ### `teachers`
 | Column | Type | Constraints | Notes |
 |--------|------|-------------|-------|
@@ -205,8 +233,6 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 | phone_number | VARCHAR(20) | NULL | |
 | created_at | TIMESTAMP | NOT NULL, DEFAULT NOW | |
 | updated_at | TIMESTAMP | NOT NULL, DEFAULT NOW | |
-
-> Teachers don't have login in POC. Admin manages their records. FK from `time_slots` enables teacher ↔ course/slot queries.
 
 ### `time_slots`
 | Column | Type | Constraints | Notes |
@@ -234,6 +260,7 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 | student_id | UUID | FK → students.id, NOT NULL | |
 | program_id | UUID | FK → programs.id, NOT NULL | |
 | time_slot_id | UUID | FK → time_slots.id, NOT NULL | |
+| first_class_date | DATE | NOT NULL | Date of the first class (chosen on the form) |
 | status | ENUM('pending','approved','rejected') | NOT NULL, DEFAULT 'pending' | |
 | submitted_at | TIMESTAMP | NOT NULL, DEFAULT NOW | |
 | reviewed_at | TIMESTAMP | NULL | |
@@ -263,15 +290,13 @@ users (admin) ──1:N──▶ registrations (reviewed_by)
 
 ## 6. Database Setup
 
-Two SQL artifacts must be applied to the Supabase project before the API works:
+Two SQL artifacts must be applied to the Supabase project **in order**, before the API works:
 
-| File | Purpose |
-|------|---------|
-| [server/db/migrations/001_register_with_capacity.sql](../server/db/migrations/001_register_with_capacity.sql) | `register_with_capacity()` Postgres function. Atomically validates slot capacity, inserts the registration, and increments `time_slots.current_count`. Called by `POST /registrations`. |
-| [server/db/migrations/002_rls_policies.sql](../server/db/migrations/002_rls_policies.sql) | RLS policies for all 7 tables. Parents see only their own data; admins see all; programs/locations/teachers/time_slots are read-by-any-authenticated, write-by-admin. The Node API uses the service-role key (which bypasses RLS) — these policies are defense-in-depth for any future direct-to-Supabase client. |
-
-RLS must be **enabled** on each table (Table Editor → toggle) before the policies in `002` will take effect.
-
+| # | File | Purpose |
+|---|------|---------|
+| 1 | [schema.sql](../server/db/schema.sql) | Full DDL — enums + all 7 tables (`users`, `programs`, `locations`, `teachers`, `students`, `time_slots`, `registrations`), constraints, and indexes. |
+| 2 | [register_with_capacity.sql](../server/db/register_with_capacity.sql) | `register_with_capacity(p_student_id, p_program_id, p_time_slot_id, p_first_class_date)` Postgres function. Atomically validates slot capacity, inserts the registration, and increments `time_slots.current_count`. Called by `POST /registrations`. |
+| 3 | [review_registration.sql](../server/db/review_registration.sql) | `review_registration(p_registration_id, p_status, p_reviewer_id)` Postgres function. Atomically sets the registration status/reviewer and decrements `time_slots.current_count` on the first transition into `rejected`. Called by `PATCH /admin/registrations/:id`. |
 ---
 
 ## 7. Verification
