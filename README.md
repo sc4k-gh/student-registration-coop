@@ -128,6 +128,11 @@ SUPABASE_SERVICE_ROLE_KEY=<service-role key — privileged backend ops>
 SUPABASE_ANON_KEY=<anon/public key — user-facing auth>
 PORT=<port to listen on, e.g. 3000>
 
+# Integration tests only (a real non-@sc4k.ca parent login):
+Run the following commands in the terminal:-
+  $env:TEST_PARENT_EMAIL="you@example.com"
+  $env:TEST_PARENT_PASSWORD="yourpassword"
+
 Ignore:
 CORS_ORIGIN=<comma-separated allowed origins; leave empty to allow none>
 ```
@@ -136,7 +141,10 @@ CORS_ORIGIN=<comma-separated allowed origins; leave empty to allow none>
 
 ```bash
 npm start          # or: npm run dev  (nodemon)
-npm test           # run the Vitest suite
+npm test           # Vitest integration suite — hits LIVE Supabase.
+                   # Creates+auto-deletes real rows; admin tests are
+                   # skipped unless @sc4k.ca admin creds are added.
+                   # Parent suites skip if TEST_PARENT_* is unset.
 ```
 
 ### 4. Frontend (client)
