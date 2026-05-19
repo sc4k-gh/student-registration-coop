@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, TextInput } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { Picker } from '@react-native-picker/picker';
 import apiClient from '../api/client.js';
 
 export default function TeachersPage() {
     const [teachersQuery, setTeachersQuery] = React.useState('');
-    const [Search, setSearch] = React.useState('');
+    const [search, setSearch] = React.useState('');
+    const [searchMode, setSearchMode] = React.useState('');
     
     // Fetch all teachers, with their name, courses, age, and time slots, from the backend.
     const { data, isLoading, isError } = useQuery({
@@ -15,8 +17,8 @@ export default function TeachersPage() {
 
     const searchQuery = () => {
         if (!data) return [];
-        if (Search !== '')
-            return data.filter(item => item.name.toLowerCase().includes(Search.toLowerCase()));
+        if (search !== '')
+            return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()));
         return data;
     };
     
@@ -29,12 +31,12 @@ export default function TeachersPage() {
     
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Search by teacher name</Text>
+            <Text style={styles.label}>Search by filtering criteria</Text>
             <TextInput
                 style={styles.input}
                 autoCapitalize="none"
                 value={teachersQuery}
-                placeholder="Enter teacher name"
+                placeholder="Enter teacher value"
                 placeholderTextColor="#666666"
                 onChangeText={setTeachersQuery}
             />
@@ -45,6 +47,13 @@ export default function TeachersPage() {
                     onPress={searchButton}>
                     <Text style={styles.buttonText}>Search</Text>
             </Pressable>
+            <Text style={styles.label}>Change filtering criteria</Text>
+            <Picker style={styles.picker}
+                selectedValue={searchMode}
+                onValueChange={(modeValue) => setSearchMode(modeValue)}>
+                <Picker.Item label="ID" value="id"/>
+                <Picker.Item label="Name" value="name"/>
+            </Picker>
             <Text style={styles.header}>Teachers</Text>
             <FlatList
                 data={searchQuery()}
@@ -62,6 +71,7 @@ export default function TeachersPage() {
                     return (
                         <View style={styles.card}>
                             <Text style={styles.name}>{item.name}</Text>
+                            <Text>ID: {item.id}</Text>
                             <Text>Email: {item.email}</Text>
                             <Text>Phone: {item.phone_number}</Text>
                             <Text>Courses: {programs || 'No courses assigned'}</Text>
@@ -124,4 +134,13 @@ const styles = StyleSheet.create({
     buttonDisabled: { opacity: 0.5 },
     buttonText: { color: '#fff', fontWeight: '600' },
     secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
+    picker: {
+        backgroundColor: 'white',
+        marginBottom: 10, 
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
 });

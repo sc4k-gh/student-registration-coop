@@ -1,11 +1,13 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, TextInput } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { Picker } from '@react-native-picker/picker';
 import apiClient from '../api/client.js';
 
 export default function CoursesPage() {
-    const [studentsQuery, setStudentsQuery] = React.useState('');
-    const [Search, setSearch] = React.useState('');
+    const [coursesQuery, setCoursesQuery] = React.useState('');
+    const [search, setSearch] = React.useState('');
+    const [searchMode, setSearchMode] = React.useState('');
 
     // Fetch programs time slot counts from the backend.
     const { data, isLoading, isError } = useQuery({
@@ -15,13 +17,13 @@ export default function CoursesPage() {
         
     const searchQuery = () => {
         if (!data) return [];
-        if (Search !== '')
-            return data.filter(item => item.name.toLowerCase().includes(Search.toLowerCase()));
+        if (search !== '')
+            return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()));
         return data;
     };
 
     function searchButton() {
-        setSearch(studentsQuery);
+        setSearch(coursesQuery);
     };
 
     if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
@@ -29,15 +31,22 @@ export default function CoursesPage() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Search by course name</Text>
+            <Text style={styles.label}>Search by filtering criteria</Text>
                 <TextInput
                     style={styles.input}
                     autoCapitalize="none"
-                    value={studentsQuery}
-                    placeholder="Enter course name"
+                    value={coursesQuery}
+                    placeholder="Enter course value"
                     placeholderTextColor="#666666"
-                    onChangeText={setStudentsQuery}
+                    onChangeText={setCoursesQuery}
                 />
+                <Text style={styles.label}>Change filtering criteria</Text>
+                <Picker style={styles.picker}
+                    selectedValue={searchMode}
+                    onValueChange={(modeValue) => setSearchMode(modeValue)}>
+                    <Picker.Item label="ID" value="id"/>
+                    <Picker.Item label="Name" value="name"/>
+                </Picker>
                 <Pressable
                     style={({ pressed }) => [
                     styles.button,
@@ -60,6 +69,7 @@ export default function CoursesPage() {
                     return (
                         <View style={styles.card}>
                             <Text style={styles.title}>{item.name}</Text>
+                            <Text>ID: {item.id}</Text>
                             <Text>Level: {item.level}</Text>
                             <Text>Age Range: {item.target_age}</Text>
                             <Text>Status: {item.status}</Text>
@@ -123,4 +133,13 @@ const styles = StyleSheet.create({
     buttonDisabled: { opacity: 0.5 },
     buttonText: { color: '#fff', fontWeight: '600' },
     secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
+        picker: {
+        backgroundColor: 'white',
+        marginBottom: 10, 
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
 });

@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable, TextInput } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { Picker } from '@react-native-picker/picker';
 import apiClient from '../api/client.js';
 
 export default function StudentPage() {
     const [studentsQuery, setStudentsQuery] = React.useState('');
-    const [Search, setSearch] = React.useState('');
-    const [SearchMode, setSearchMode]
+    const [search, setSearch] = React.useState('');
+    const [searchMode, setSearchMode] = React.useState('');
 
     // Fetch all students, with their name, enrolled program, age, and parent contacts, from the backend.
     const { data, isLoading, isError } = useQuery({
@@ -16,8 +17,8 @@ export default function StudentPage() {
     
     const searchQuery = () => {
         if (!data) return [];
-        if (Search !== '')
-            return data.filter(item => item.student_name.toLowerCase().includes(Search.toLowerCase()));
+        if (search !== '')
+            return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()));
         return data;
     };
 
@@ -30,12 +31,12 @@ export default function StudentPage() {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.label}>Search by student name</Text>
+            <Text style={styles.label}>Search by filtering criteria</Text>
             <TextInput
                 style={styles.input}
                 autoCapitalize="none"
                 value={studentsQuery}
-                placeholder="Enter student name"
+                placeholder="Enter student value"
                 placeholderTextColor="#666666"
                 onChangeText={setStudentsQuery}
             />
@@ -46,6 +47,15 @@ export default function StudentPage() {
                 onPress={searchButton}>
                 <Text style={styles.buttonText}>Search</Text>
             </Pressable>
+            <Text style={styles.label}>Change filtering criteria</Text>
+            <Picker style={styles.picker}
+                selectedValue={searchMode}
+                onValueChange={(modeValue) => setSearchMode(modeValue)}>
+                <Picker.Item label="ID" value="id"/>
+                <Picker.Item label="Parent ID" value="parent_id"/>
+                <Picker.Item label="Student Name" value="student_name"/>
+                <Picker.Item label="Parent Name" value="parent_name"/>
+            </Picker>
             <Text style={styles.header}>Students</Text>
             <FlatList
                 data={searchQuery()}
@@ -53,9 +63,11 @@ export default function StudentPage() {
                 renderItem={({ item }) => (
                     <View style={styles.card}>
                         <Text style={styles.name}>{item.student_name}</Text>
+                        <Text>ID: {item.id}</Text>
                         <Text>Age: {item.age}</Text>
                         <Text>Enrolled Program: {item.registrations?.[0]?.programs?.name ?? 'Not enrolled'}</Text>
                         <Text>Parent: {item.parent_name}</Text>
+                        <Text>Parent ID: {item.parent_id}</Text>
                         <Text>Parent Email: {item.parent_email}</Text>
                         <Text>Parent Phone: {item.parent_phone}</Text>
                     </View>
@@ -114,4 +126,13 @@ const styles = StyleSheet.create({
     buttonDisabled: { opacity: 0.5 },
     buttonText: { color: '#fff', fontWeight: '600' },
     secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
+    picker: {
+        backgroundColor: 'white',
+        marginBottom: 10, 
+        elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+    },
 });
