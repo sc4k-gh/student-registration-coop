@@ -81,6 +81,7 @@ export default function Page() {
         value={name}
         placeholder="Enter your name"
         placeholderTextColor="#666666"
+        color="#000"
         onChangeText={setName}
         autoCapitalize="words"
       />

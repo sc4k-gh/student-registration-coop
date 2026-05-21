@@ -7,7 +7,7 @@ import apiClient from '../api/client.js';
 export default function CoursesPage() {
     const [coursesQuery, setCoursesQuery] = React.useState('');
     const [search, setSearch] = React.useState('');
-    const [searchMode, setSearchMode] = React.useState('');
+    const [searchMode, setSearchMode] = React.useState('name');
 
     // Fetch programs time slot counts from the backend.
     const { data, isLoading, isError } = useQuery({
@@ -16,9 +16,10 @@ export default function CoursesPage() {
     });
         
     const searchQuery = () => {
-        if (!data) return [];
-        if (search !== '')
-            return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()));
+        if (!data || Array.isArray(data) == false) {return []};
+        if (search !== '') {
+            return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()))
+        };
         return data;
     };
 
@@ -119,6 +120,7 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         backgroundColor: '#fff',
+        marginBottom: 10
     },
     button: {
         backgroundColor: '#0a7ea4',
@@ -133,7 +135,7 @@ const styles = StyleSheet.create({
     buttonDisabled: { opacity: 0.5 },
     buttonText: { color: '#fff', fontWeight: '600' },
     secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
-        picker: {
+    picker: {
         backgroundColor: 'white',
         marginBottom: 10, 
         elevation: 3,
@@ -141,5 +143,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
+        color: '#000'
     },
 });

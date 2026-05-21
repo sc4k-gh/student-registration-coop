@@ -7,7 +7,7 @@ import apiClient from '../api/client.js';
 export default function TeachersPage() {
     const [teachersQuery, setTeachersQuery] = React.useState('');
     const [search, setSearch] = React.useState('');
-    const [searchMode, setSearchMode] = React.useState('');
+    const [searchMode, setSearchMode] = React.useState('name');
     
     // Fetch all teachers, with their name, courses, age, and time slots, from the backend.
     const { data, isLoading, isError } = useQuery({
@@ -16,9 +16,10 @@ export default function TeachersPage() {
     });
 
     const searchQuery = () => {
-        if (!data) return [];
-        if (search !== '')
-            return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()));
+        if (!data || Array.isArray(data) == false) {return []};
+        if (search !== '') {
+            return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()))
+        };
         return data;
     };
     
@@ -40,13 +41,6 @@ export default function TeachersPage() {
                 placeholderTextColor="#666666"
                 onChangeText={setTeachersQuery}
             />
-            <Pressable 
-                style={({ pressed }) => [
-                    styles.button,
-                    pressed && styles.buttonPressed]}
-                    onPress={searchButton}>
-                    <Text style={styles.buttonText}>Search</Text>
-            </Pressable>
             <Text style={styles.label}>Change filtering criteria</Text>
             <Picker style={styles.picker}
                 selectedValue={searchMode}
@@ -54,6 +48,13 @@ export default function TeachersPage() {
                 <Picker.Item label="ID" value="id"/>
                 <Picker.Item label="Name" value="name"/>
             </Picker>
+            <Pressable 
+                style={({ pressed }) => [
+                    styles.button,
+                    pressed && styles.buttonPressed]}
+                onPress={searchButton}>
+                <Text style={styles.buttonText}>Search</Text>
+            </Pressable>
             <Text style={styles.header}>Teachers</Text>
             <FlatList
                 data={searchQuery()}
@@ -120,6 +121,7 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         backgroundColor: '#fff',
+        marginBottom: 10
     },
     button: {
         backgroundColor: '#0a7ea4',
@@ -142,5 +144,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
+        color: '#000'
     },
 });

@@ -7,7 +7,7 @@ import apiClient from '../api/client.js';
 export default function StudentPage() {
     const [studentsQuery, setStudentsQuery] = React.useState('');
     const [search, setSearch] = React.useState('');
-    const [searchMode, setSearchMode] = React.useState('');
+    const [searchMode, setSearchMode] = React.useState('student_name');
 
     // Fetch all students, with their name, enrolled program, age, and parent contacts, from the backend.
     const { data, isLoading, isError } = useQuery({
@@ -16,9 +16,10 @@ export default function StudentPage() {
     });
     
     const searchQuery = () => {
-        if (!data) return [];
-        if (search !== '')
-            return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()));
+        if (!data || Array.isArray(data) == false) {return []};
+        if (search !== '') {
+            return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()))
+        };
         return data;
     };
 
@@ -42,8 +43,8 @@ export default function StudentPage() {
             />
             <Pressable
                 style={({ pressed }) => [
-                styles.button,
-                pressed && styles.buttonPressed]}
+                    styles.button,
+                    pressed && styles.buttonPressed]}
                 onPress={searchButton}>
                 <Text style={styles.buttonText}>Search</Text>
             </Pressable>
@@ -112,6 +113,7 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         backgroundColor: '#fff',
+        marginBottom: 10
     },
     button: {
         backgroundColor: '#0a7ea4',
@@ -134,5 +136,6 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,
+        color: '#000'
     },
 });
