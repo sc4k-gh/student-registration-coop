@@ -23,21 +23,6 @@ export default function Page() {
       return;
     }
     
-    if (phoneNumber.length != 12 && phoneNumber.length != 10) {
-      setErrorMessage('Phone number must be formatted as either "xxx-xxx-xxxx" or "xxxxxxxxxx".')
-      return;
-    }
-
-    if (/^\S+@\S+\.\S+$/.test(emailAddress) == False) {
-      setErrorMessage('Invalid email formatting.')
-      return;
-    }
-
-    let tempphonenumber = phoneNumber;
-    if (!/^\d{3}-\d{3}-\d{4}$/.test(phoneNumber)) {
-      tempphonenumber = phoneNumber.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3');
-    }
-
     if (password != passwordconfirm) {
       setErrorMessage('Both password fields must match.')
       return;
@@ -50,10 +35,10 @@ export default function Page() {
 
     setSubmitting(true);
     const result = await apiClient.post('/auth/signup', {
-      name,
-      emailAddress,
-      password,
-      phone_number: tempphonenumber,
+      name: name,
+      emailAddress: emailAddress,
+      password: password,
+      phone_number: phoneNumber,
     });
 
     if (result?.error) {
@@ -169,6 +154,7 @@ const styles = StyleSheet.create({
     padding: 12,
     fontSize: 16,
     backgroundColor: '#fff',
+    color: '#000'
   },
   button: {
     backgroundColor: '#0a7ea4',

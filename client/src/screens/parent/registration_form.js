@@ -197,7 +197,7 @@ export default function RegistrationForm() {
                 />
 
             { /* Email */}
-            <Text style={styles.label}>Parent Email</Text>
+            <Text style={styles.label}>Parent Email <Text style={styles.warninglabel}>*</Text></Text>
                 <TextInput
                     style={styles.input}
                     value={parentEmail} 
@@ -208,7 +208,7 @@ export default function RegistrationForm() {
                 />
                 
                 {/* Phone number */}
-                <Text style={styles.label}>Parent Phone</Text> 
+                <Text style={styles.label}>Parent Phone <Text style={styles.warninglabel}>*</Text></Text> 
                     <TextInput
                         style={styles.input}
                         value={parentPhone}
@@ -226,6 +226,7 @@ export default function RegistrationForm() {
                     <Text>Loading programs...</Text>
                 ) : (
                     <Picker
+                        style={{color: '#000'}}
                         selectedValue={selectedProgram}
                         onValueChange={(itemValue) => setSelectedProgram(itemValue)}>
                         <Picker.Item label="Select a program" value="" />
@@ -244,6 +245,7 @@ export default function RegistrationForm() {
         <View style={styles.section}>
             <Text style={styles.label}>Mode <Text style={styles.warninglabel}>*</Text></Text>
                 <Picker
+                    style={{color: '#000'}}
                     selectedValue={selectedMode}
                     onValueChange={(itemValue) => {
                     setSelectedMode(itemValue);
@@ -262,6 +264,7 @@ export default function RegistrationForm() {
             <View style={styles.section}>
                     <Text style={styles.label}>Location <Text style={styles.warninglabel}>*</Text></Text>
                     <Picker
+                        style={{color: '#000'}}
                         selectedValue={selectedLocation}
                         onValueChange={(itemValue) => setSelectedLocation(itemValue)}>
                         <Picker.Item label="Select location" value="" />
@@ -284,6 +287,7 @@ export default function RegistrationForm() {
                     <Text>Loading time slots...</Text>
                 ) : (
                     <Picker
+                        style={{color: '#000'}}
                         selectedValue={selectedTimeSlot}
                         onValueChange={(itemValue) => setSelectedTimeSlot(itemValue)}>
                         <Picker.Item label="Select time slot" value="" />
