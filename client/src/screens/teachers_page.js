@@ -15,6 +15,7 @@ export default function TeachersPage() {
         queryFn: () => apiClient.get('/admin/teachers'),
     });
 
+    //If search isn't empty, filter all results to rows that have a column equal to searchMode and a value equal to search
     const searchQuery = () => {
         if (!data || Array.isArray(data) == false) {return []};
         if (search !== '') {
