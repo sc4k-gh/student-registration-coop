@@ -25,6 +25,7 @@ function MainApp() {
             <Drawer.Screen name="Teachers" component={TeachersPage} />
             <Drawer.Screen name="Courses" component={CoursesPage} />
             <Drawer.Screen name="Settings" component={SettingsPage} />
+            <Drawer.Screen name="Register New Student" component={RegistrationForm} />
             <Drawer.Screen name="My Registrations" component={MyRegistrations} />
         </Drawer.Navigator>
     );

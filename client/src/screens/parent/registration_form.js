@@ -35,31 +35,34 @@ export default function RegistrationForm() {
     //Set up navigation
     const navigation = useNavigation()
 
-    // Fetch programs locations, and time slots from the backend.
+    // Fetch programs from the backend.
     const { data: programs, isLoading: programsLoading } = useQuery({
         queryKey: ['programs'],
         queryFn: () => apiClient.get('/programs'),
-        });
-    
+    });
+
+    // Fetch locations from the backend.
     const { data: locations, isLoading: locationsLoading } = useQuery({
         queryKey: ['locations'],
         queryFn: () => apiClient.get('/locations'),
-        });
-    
-        const { data: timeSlots, isLoading: timeSlotsLoading } = useQuery({
-            queryKey: ['timeSlots', selectedProgram, selectedMode, selectedLocation],
-            queryFn: async () => {
-                const params = new URLSearchParams({
-                    program_id: selectedProgram,
-                    mode: selectedMode,
-                    ...(selectedMode === 'in-person' && selectedLocation && { location_id: selectedLocation })
-                });
-                const result = await apiClient.get(`/time-slots?${params}`);
-                return result; 
+    });
+
+    // Fetch time slots from the backend.
+    const { data: timeSlotResponse, isLoading: timeSlotsLoading } = useQuery({
+        queryKey: ['timeSlots', selectedProgram, selectedMode, selectedLocation],
+        queryFn: async () => {
+            const params = new URLSearchParams({
+                program_id: selectedProgram,
+                mode: selectedMode,
+                ...(selectedMode === 'in-person' && selectedLocation && { location_id: selectedLocation })
+            });
+            const result = await apiClient.get(`/time-slots?${params}`);
+            return result;
         },
         // Fetching for time slots is enabled only when we already have program and mode.
         enabled: !!selectedProgram && !!selectedMode,
     });
+    const timeSlots = timeSlotResponse?.slots || [];
 
     const handleSubmit = async () => {
         // Check is currently submitting.
