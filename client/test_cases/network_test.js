@@ -1,4 +1,4 @@
-import apiClient from './api/client.js';
+import apiClient from '../src/api/client.js';
 import { useQuery } from '@tanstack/react-query';
 
 //Consider replacing with a dedicated test endpoint that just returns a short number or string later

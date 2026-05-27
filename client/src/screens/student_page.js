@@ -3,6 +3,7 @@ import { View, Text, FlatList, StyleSheet, Pressable, TextInput } from 'react-na
 import { useQuery } from '@tanstack/react-query';
 import { Picker } from '@react-native-picker/picker';
 import apiClient from '../api/client.js';
+import {expect, jest, test} from '@jest/globals';
 
 export default function StudentPage() {
     const [studentsQuery, setStudentsQuery] = React.useState('');
@@ -16,7 +17,7 @@ export default function StudentPage() {
     });
     
     //If search isn't empty, filter all results to rows that have a column equal to searchMode and a value equal to search
-    const searchQuery = () => {
+    export const searchQuery = () => {
         if (!data || Array.isArray(data) == false) {return []};
         if (search !== '') {
             return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()))
