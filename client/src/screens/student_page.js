@@ -5,10 +5,11 @@ import apiClient from '../api/client.js';
 
 export default function StudentPage() {
     // Fetch all students, with their name, enrolled program, age, and parent contacts, from the backend.
-    const { data, isLoading, isError } = useQuery({
+    const { data: responseData, isLoading, isError } = useQuery({
         queryKey: ['students'],
         queryFn: () => apiClient.get('/admin/students'),
     });
+    const data = responseData?.data || [];
 
     if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
     if (isError) return <View style={styles.container}><Text>Error loading students.</Text></View>;

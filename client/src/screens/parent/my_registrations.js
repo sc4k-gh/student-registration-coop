@@ -5,13 +5,14 @@ import apiClient from '../../api/client.js';
 
 export default function MyRegistrations() {
     // Fetch all registrations of the current logged in user.
-    const { data, isLoading, isError } = useQuery({
+    const { data: responseData, isLoading, isError } = useQuery({
         queryKey: ['registrations'],
         queryFn: () => apiClient.get('/registrations/my'),
     });
+    const data = responseData?.data || [];
 
     // Flatten registrations from students
-    const allRegistrations = data?.flatMap(student => 
+    const allRegistrations = data?.flatMap(student =>
     student.registrations?.map(reg => ({
         ...reg,
         student_name: student.student_name,

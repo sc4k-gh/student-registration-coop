@@ -16,8 +16,14 @@ const getHeaders = async () => {
 };
 
 const apiClient = {
-  get: async (endpoint) =>
-    fetch(`${BASE_URL}${endpoint}`, { headers: await getHeaders() }).then((r) => r.json()),
+  get: async (endpoint) => {
+    const response = await fetch(`${BASE_URL}${endpoint}`, { headers: await getHeaders() });
+    // Check for errors, if found display the errors.
+    if (!response.ok) {
+      return response.json().then(err => Promise.reject(err));
+    }
+    return response.json();
+  },
 
   post: async (endpoint, body) =>
     fetch(`${BASE_URL}${endpoint}`, {

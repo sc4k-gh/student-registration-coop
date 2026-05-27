@@ -5,10 +5,11 @@ import apiClient from '../api/client.js';
 
 export default function TeachersPage() {
     // Fetch all teachers, with their name, courses, age, and time slots, from the backend.
-    const { data, isLoading, isError } = useQuery({
+    const { data: responseData, isLoading, isError } = useQuery({
         queryKey: ['teachers'],
         queryFn: () => apiClient.get('/admin/teachers'),
     });
+    const data = responseData?.data || [];
 
     if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
     if (isError) return <View style={styles.container}><Text>Error loading teachers.</Text></View>;
@@ -28,7 +29,7 @@ export default function TeachersPage() {
                     const timeSlots = item.time_slots
                         ?.map(slot => `${slot.day_of_week} ${slot.start_time}-${slot.end_time}`)
                         .join(', ');
-                    
+
                     return (
                         <View style={styles.card}>
                             <Text style={styles.name}>{item.name}</Text>

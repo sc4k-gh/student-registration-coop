@@ -1,16 +1,19 @@
 import { supabase } from '../config/supabase.js';
+import { pageRange, PAGE_SIZE } from '../utils/validation.js';
 
 export const listMine = async (req, res) => {
+  const { page, from, to } = pageRange(req.query.page);
   const { data, error } = await supabase
     .from('students')
     .select('*, registrations(*, programs(*), time_slots(*))')
-    .eq('parent_id', req.user.id);
+    .eq('parent_id', req.user.id)
+    .range(from, to);
 
   if (error) {
     console.error('registrations.listMine failed', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
-  res.json(data);
+  res.json({ data, page, page_size: PAGE_SIZE });
 };
 
 export const create = async (req, res) => {

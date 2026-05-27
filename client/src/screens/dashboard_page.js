@@ -5,15 +5,17 @@ import apiClient from '../api/client.js';
 
 export default function DashboardScreen() {
   // Fetch students, teachers, and programs from the backend.
-  const { data: students, isLoading: studentsLoading } = useQuery({
+  const { data: studentsData, isLoading: studentsLoading } = useQuery({
     queryKey: ['students'],
     queryFn: () => apiClient.get('/admin/students'),
   });
+  const students = studentsData?.data || [];
 
-  const { data: teachers, isLoading: teachersLoading } = useQuery({
+  const { data: teachersData, isLoading: teachersLoading } = useQuery({
     queryKey: ['teachers'],
     queryFn: () => apiClient.get('/admin/teachers'),
   });
+  const teachers = teachersData?.data || [];
 
   const { data: programs, isLoading: programsLoading } = useQuery({
     queryKey: ['programs'],
@@ -30,12 +32,12 @@ export default function DashboardScreen() {
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Total Students</Text>
-        <Text style={styles.cardValue}>{students?.length ?? '-'}</Text>
+        <Text style={styles.cardValue}>{students.length ?? '-'}</Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Total Teachers</Text>
-        <Text style={styles.cardValue}>{teachers?.length ?? '-'}</Text>
+        <Text style={styles.cardValue}>{teachers.length ?? '-'}</Text>
       </View>
 
       <View style={styles.card}>
