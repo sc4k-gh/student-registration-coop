@@ -3,7 +3,15 @@ import { View, Text, FlatList, StyleSheet, Pressable, TextInput } from 'react-na
 import { useQuery } from '@tanstack/react-query';
 import { Picker } from '@react-native-picker/picker';
 import apiClient from '../api/client.js';
-import {expect, jest, test} from '@jest/globals';
+
+//If search isn't empty, filter all results to rows that have a column equal to searchMode and a value equal to search
+export const searchQuery = (table, searchTerm, searchType) => {
+    if (!table || Array.isArray(table) == false) {return []};
+    if (searchTerm !== '') {
+        return table.filter(item => item[searchType].toLowerCase().includes(searchTerm.toLowerCase()))
+    };
+    return table;
+};
 
 export default function StudentPage() {
     const [studentsQuery, setStudentsQuery] = React.useState('');
@@ -16,14 +24,6 @@ export default function StudentPage() {
         queryFn: () => apiClient.get('/admin/students'),
     });
     
-    //If search isn't empty, filter all results to rows that have a column equal to searchMode and a value equal to search
-    export const searchQuery = () => {
-        if (!data || Array.isArray(data) == false) {return []};
-        if (search !== '') {
-            return data.filter(item => item[searchMode].toLowerCase().includes(search.toLowerCase()))
-        };
-        return data;
-    };
 
     function searchButton() {
         setSearch(studentsQuery);
@@ -61,7 +61,7 @@ export default function StudentPage() {
             </Picker>
             <Text style={styles.header}>Students</Text>
             <FlatList
-                data={searchQuery()}
+                data={searchQuery(data, search, searchMode)}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => (
                     <View style={styles.card}>

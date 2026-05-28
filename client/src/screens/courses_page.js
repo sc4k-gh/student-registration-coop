@@ -34,28 +34,28 @@ export default function CoursesPage() {
     return (
         <View style={styles.container}>
             <Text style={styles.label}>Search by filtering criteria</Text>
-                <TextInput
-                    style={styles.input}
-                    autoCapitalize="none"
-                    value={coursesQuery}
-                    placeholder="Enter course value"
-                    placeholderTextColor="#666666"
-                    onChangeText={setCoursesQuery}
-                />
-                <Text style={styles.label}>Change filtering criteria</Text>
-                <Picker style={styles.picker}
-                    selectedValue={searchMode}
-                    onValueChange={(modeValue) => setSearchMode(modeValue)}>
-                    <Picker.Item label="ID" value="id"/>
-                    <Picker.Item label="Name" value="name"/>
-                </Picker>
-                <Pressable
-                    style={({ pressed }) => [
-                    styles.button,
-                    pressed && styles.buttonPressed]}
-                    onPress={searchButton}>
-                    <Text style={styles.buttonText}>Search</Text>
-                </Pressable>
+            <TextInput
+                style={styles.input}
+                autoCapitalize="none"
+                value={coursesQuery}
+                placeholder="Enter course value"
+                placeholderTextColor="#666666"
+                onChangeText={setCoursesQuery}
+            />
+            <Text style={styles.label}>Change filtering criteria</Text>
+            <Picker style={styles.picker}
+                selectedValue={searchMode}
+                onValueChange={(modeValue) => setSearchMode(modeValue)}>
+                <Picker.Item label="ID" value="id"/>
+                <Picker.Item label="Name" value="name"/>
+            </Picker>
+            <Pressable
+                style={({ pressed }) => [
+                styles.button,
+                pressed && styles.buttonPressed]}
+                onPress={searchButton}>
+                <Text style={styles.buttonText}>Search</Text>
+            </Pressable>
             <Text style={styles.header}>Courses</Text>
             <FlatList
                 data={searchQuery()}
