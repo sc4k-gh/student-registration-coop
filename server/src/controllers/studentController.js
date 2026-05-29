@@ -2,11 +2,11 @@ import { supabase } from '../config/supabase.js';
 import { isValidEmail } from '../utils/validation.js';
 
 export const create = async (req, res) => {
-  const { student_name, age, parent_email, parent_phone } = req.body ?? {};
+  const { student_name, student_email, student_phone, age, description, parent_name, parent_email, parent_phone } = req.body ?? {};
 
-  if (!student_name || !age || !parent_email || !parent_phone) {
+  if (!student_name || !age || !parent_name || !parent_email || !parent_phone) {
     return res.status(400).json({
-      error: 'student_name, age, parent_email, and parent_phone are required',
+      error: 'student_name, age, parent_name, parent_email, and parent_phone are required',
     });
   }
   if (!isValidEmail(parent_email)) {
@@ -19,7 +19,11 @@ export const create = async (req, res) => {
     .insert({
       parent_id: req.user.id,
       student_name,
+      student_email,
+      student_phone,
       age,
+      description,
+      parent_name,
       parent_email,
       parent_phone,
     })
