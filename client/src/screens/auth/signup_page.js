@@ -4,6 +4,23 @@ import { Pressable, StyleSheet, TextInput, Text, View, Platform } from 'react-na
 import apiClient from '../../api/client.js';
 import { useAuth } from '../../auth/AuthProvider.js';
 
+export async function verifySubmission(name, emailAddress, phoneNumber, password, passwordconfirm) {
+    setErrorMessage('');
+    if (!name || !emailAddress || !password || !phoneNumber || !passwordconfirm) {
+      return 'All fields are required';
+    };
+    
+    if (password != passwordconfirm) {
+      return 'Both password fields must match.';
+    };
+    
+    if (password.length < 6) {
+      return 'Password must be at least 6 characters long.';
+    };
+    
+    return '';
+  };
+
 export default function Page() {
   const { signIn } = useAuth();
   const navigation = useNavigation();
@@ -16,20 +33,12 @@ export default function Page() {
   const [errorMessage, setErrorMessage] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
 
+  
   const handleSubmit = async () => {
-    setErrorMessage('');
-    if (!name || !emailAddress || !password || !phoneNumber) {
-      setErrorMessage('All fields are required');
-      return;
-    }
-    
-    if (password != passwordconfirm) {
-      setErrorMessage('Both password fields must match.')
-      return;
-    }
-    
-    if (password.length < 6) {
-      setErrorMessage('Password must be at least 6 characters long.')
+
+    const validationError = verifySubmission(name, emailAddress, phoneNumber, password, passwordconfirm);
+    if (validationError) {
+      setErrorMessage(validationError);
       return;
     }
 

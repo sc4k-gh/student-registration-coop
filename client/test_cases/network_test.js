@@ -9,19 +9,20 @@ test('Database can be queried and return the expected data', async () => {
   expect(response.data).toBeInstanceOf(Array); // Ensure result is an array
 
   // Ensure result matches table structure
-  expect(response.data[0]).toHaveProperty('id');
-  expect(response.data[0]).toHaveProperty('level');
-  expect(response.data[0]).toHaveProperty('target_age');
-  expect(response.data[0]).toHaveProperty('status');
+  expect(response.data[0]).toHaveProperty('id'); // Ensure ID column exists
+  expect(response.data[0]).toHaveProperty('level'); // Ensure level column exists
+  expect(response.data[0]).toHaveProperty('target_age'); // Ensure target_age column exists
+  expect(response.data[0]).toHaveProperty('status'); // Ensure status column exists
 });
 
 //An invalid endpoint should return a 404 error
-test('API returns an error for invalid endpoint', async () => {
+test('API returns a 404 error for an invalid endpoint', async () => {
   const response = await apiClient.get('/invalidendpoint');
   expect(response.status).toBe(404); // Ensure 404 error
 });
 
-test('API returns an error for invalid endpoint', async () => {
+//Auth restricted endpoints should return a 401 error without proper role
+test('API returns a 401 error without necessary authorization', async () => {
   const response = await apiClient.get('/invalidendpoint');
-  expect(response.status).toBe(404); // Ensure 404 error
+  expect(response.status).toBe(401); // Ensure 401 error
 });

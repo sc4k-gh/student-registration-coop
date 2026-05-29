@@ -1,4 +1,4 @@
-import { searchQuery } from './studentSearch';
+import { searchQuery } from '../src/screens/student_page.js';
 
 const searchMode = 'student_name';
 const search = 'BA';
