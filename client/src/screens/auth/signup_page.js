@@ -34,16 +34,16 @@ export default function Page() {
     }
 
     setSubmitting(true);
-    const result = await apiClient.post('/auth/signup', {
-      name,
-      emailAddress,
-      password,
-      phone_number: phoneNumber,
-    });
-
-    if (result?.error) {
+    try {
+      await apiClient.post('/auth/signup', {
+        name,
+        emailAddress,
+        password,
+        phone_number: phoneNumber,
+      });
+    } catch (err) {
       setSubmitting(false);
-      setErrorMessage(result.error);
+      setErrorMessage(err?.error || err?.message || 'Signup failed');
       return;
     }
 
@@ -53,7 +53,7 @@ export default function Page() {
       setErrorMessage(signInError.message);
       return;
     }
-    navigation.navigate('Dashboard');
+    // AppNavigator swaps the stack automatically when isSignedIn flips.
   };
 
   return (

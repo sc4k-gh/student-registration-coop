@@ -17,8 +17,8 @@ export default function TeachersPage() {
         <View style={styles.container}>
             <Text style={styles.header}>Teachers</Text>
             <FlatList
-                data={data}
-                keyExtractor={(item) => item.id}
+                data={data?.data ?? []}
+                keyExtractor={(item) => String(item.id)}
                 renderItem={({ item }) => {
                     const programs = item.time_slots
                         ?.map(slot => slot.programs?.name)

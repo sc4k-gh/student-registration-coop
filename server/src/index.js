@@ -1,6 +1,5 @@
 import 'dotenv/config';
 import express from 'express';
-import cors from 'cors';
 
 import programs from './routes/programs.js';
 import auth from './routes/auth.js';
@@ -27,6 +26,11 @@ export const app = express();
 // );
 app.use(express.json());
 
+app.use((req, _res, next) => {
+  console.log(req.method, req.url);
+  next();
+});
+
 app.use('/auth', auth);
 app.use('/programs', programs);
 app.use('/locations', locations);
@@ -34,6 +38,10 @@ app.use('/time-slots', timeSlots);
 app.use('/registrations', registrations);
 app.use('/admin', admin);
 app.use('/students', students);
+
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
 
 app.use((err, _req, res, _next) => {
   console.error(err);

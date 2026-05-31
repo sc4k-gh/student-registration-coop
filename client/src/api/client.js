@@ -15,46 +15,38 @@ const getHeaders = async () => {
   };
 };
 
+const handleResponse = async (r) => {
+  if (!r.ok) {
+    const err = await r.json().catch(() => ({ error: `HTTP ${r.status}` }));
+    return Promise.reject(err);
+  }
+  if (r.status === 204) return null;
+  return r.json();
+};
+
 const apiClient = {
   get: async (endpoint) =>
-    fetch(`${BASE_URL}${endpoint}`, { headers: await getHeaders() }).then((r) => r.json()),
+    fetch(`${BASE_URL}${endpoint}`, { headers: await getHeaders() }).then(handleResponse),
 
   post: async (endpoint, body) =>
     fetch(`${BASE_URL}${endpoint}`, {
       method: 'POST',
       headers: await getHeaders(),
       body: JSON.stringify(body),
-    }).then((r) => {
-      // Check for errors, if found display the errors.
-      if (!r.ok) { 
-        return r.json().then(err => Promise.reject(err));
-    }
-    return r.json()
-  }),
+    }).then(handleResponse),
 
   patch: async (endpoint, body) =>
     fetch(`${BASE_URL}${endpoint}`, {
       method: 'PATCH',
       headers: await getHeaders(),
       body: JSON.stringify(body),
-    }).then((r) => {
-      // Check for errors, if found display the errors.
-      if (!r.ok) {
-        return r.json().then(err => Promise.reject(err));
-      }
-    return r.json()
-  }),
+    }).then(handleResponse),
 
   delete: async (endpoint) =>
     fetch(`${BASE_URL}${endpoint}`, {
       method: 'DELETE',
       headers: await getHeaders(),
-    }).then((r) => {
-      if (!r.ok) {
-        return r.json().then(err => Promise.reject(err));
-      }
-    return r.json();
-  }),
+    }).then(handleResponse),
 };
 
 export default apiClient;

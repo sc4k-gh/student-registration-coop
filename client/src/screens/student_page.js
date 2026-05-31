@@ -17,14 +17,13 @@ export default function StudentPage() {
         <View style={styles.container}>
             <Text style={styles.header}>Students</Text>
             <FlatList
-                data={data}
-                keyExtractor={(item) => item.id}
+                data={data?.data ?? []}
+                keyExtractor={(item) => String(item.id)}
                 renderItem={({ item }) => (
                     <View style={styles.card}>
                         <Text style={styles.name}>{item.student_name}</Text>
                         <Text>Age: {item.age}</Text>
                         <Text>Enrolled Program: {item.registrations?.[0]?.programs?.name ?? 'Not enrolled'}</Text>
-                        <Text>Parent: {item.parent_name}</Text>
                         <Text>Parent Email: {item.parent_email}</Text>
                         <Text>Parent Phone: {item.parent_phone}</Text>
                     </View>

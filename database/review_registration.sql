@@ -1,7 +1,8 @@
--- Atomic registration review: status change + capacity release on reject.
+-- Atomic registration review: status change + reviewer stamp.
+-- current_count is decremented by trg_registration_update_or_delete (schema.sql)
+-- when status transitions into 'rejected'; do NOT decrement here or it will
+-- double-count.
 -- Apply once in the Supabase SQL editor, AFTER schema.sql.
--- Decrements time_slots.current_count only on the first transition into
--- 'rejected' (idempotent on repeated calls).
 create or replace function public.review_registration(
   p_registration_id uuid,
   p_status registration_status,
@@ -16,13 +17,6 @@ begin
   select * into v_reg from registrations where id = p_registration_id for update;
   if not found then
     raise exception 'registration not found' using errcode = 'P0002';
-  end if;
-
-  if p_status = 'rejected' and v_reg.status <> 'rejected' then
-    update time_slots
-       set current_count = greatest(current_count - 1, 0),
-           updated_at = now()
-     where id = v_reg.time_slot_id;
   end if;
 
   update registrations

@@ -36,7 +36,6 @@ export const signup = async (req, res) => {
   const { error: insertErr } = await supabase.from('users').insert({
     id: authUser.id,
     email: emailAddress,
-    password_hash: 'supabase_managed',
     role,
     name,
     phone_number,

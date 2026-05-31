@@ -1,11 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase.js';
 
 const AuthContext = createContext(null);
 
+// Role lives in app_metadata (server-set at signup, see architecture §1).
+const roleFromSession = (s) => s?.user?.app_metadata?.role ?? null;
+
 export function AuthProvider({ children }) {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -23,11 +28,16 @@ export function AuthProvider({ children }) {
   const signIn = async (email, password) =>
     supabase.auth.signInWithPassword({ email, password });
 
-  const signOut = async () => supabase.auth.signOut();
+  const signOut = async () => {
+    const result = await supabase.auth.signOut();
+    queryClient.clear();
+    return result;
+  };
 
   const value = {
     session,
     user: session?.user ?? null,
+    role: roleFromSession(session),
     isSignedIn: !!session,
     loading,
     signIn,

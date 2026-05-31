@@ -26,7 +26,7 @@ export default function Page() {
       setErrorMessage(error.message);
       return;
     }
-    navigation.navigate('Dashboard');
+    // AppNavigator swaps the navigator stack automatically when isSignedIn flips.
   };
 
   return (

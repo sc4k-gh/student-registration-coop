@@ -30,10 +30,12 @@ export const summary = async (_req, res) => {
 export const query = async (req, res) => {
   const { page, from, to } = pageRange(req.query.page);
 
+  // !inner = drop parent rows when nested filters don't match (PostgREST).
   let q = supabase
     .from('registrations')
     .select(
-      '*, students (*), time_slots (*, programs (*), teachers (*), locations (*))',
+      '*, students (*), time_slots!inner (*, programs (*), teachers (*), locations (*))',
+      { count: 'exact' },
     );
 
   if (req.query.program_id) q = q.eq('program_id', req.query.program_id);
@@ -41,29 +43,29 @@ export const query = async (req, res) => {
   if (req.query.teacher_id) q = q.eq('time_slots.teacher_id', req.query.teacher_id);
   if (req.query.location_id) q = q.eq('time_slots.location_id', req.query.location_id);
 
-  const { data, error } = await q.range(from, to);
+  const { data, error, count } = await q.range(from, to);
   if (error) return fail(res, 'admin.query', error);
-  res.json({ data, page, page_size: PAGE_SIZE });
+  res.json({ data, page, page_size: PAGE_SIZE, total: count ?? 0 });
 };
 
 export const listStudents = async (req, res) => {
   const { page, from, to } = pageRange(req.query.page);
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('students')
-    .select('*, registrations (*, programs (*))')
+    .select('*, registrations (*, programs (*))', { count: 'exact' })
     .range(from, to);
   if (error) return fail(res, 'admin.listStudents', error);
-  res.json({ data, page, page_size: PAGE_SIZE });
+  res.json({ data, page, page_size: PAGE_SIZE, total: count ?? 0 });
 };
 
 export const listTeachers = async (req, res) => {
   const { page, from, to } = pageRange(req.query.page);
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('teachers')
-    .select('*, time_slots (*, programs (*))')
+    .select('*, time_slots (*, programs (*))', { count: 'exact' })
     .range(from, to);
   if (error) return fail(res, 'admin.listTeachers', error);
-  res.json({ data, page, page_size: PAGE_SIZE });
+  res.json({ data, page, page_size: PAGE_SIZE, total: count ?? 0 });
 };
 
 export const listTeacherStudents = async (req, res) => {
@@ -175,20 +177,27 @@ export const createTimeSlot = async (req, res) => {
     .select()
     .single();
 
-  if (error) return fail(res, 'admin.createTimeSlot', error);
+  if (error) {
+    // 23514 = check constraint (chk_mode_location, chk_capacity, chk_time)
+    // 23502 = not null. Both are client errors.
+    if (error.code === '23514' || error.code === '23502') {
+      return res.status(400).json({ error: error.message });
+    }
+    return fail(res, 'admin.createTimeSlot', error);
+  }
   res.status(201).json(data);
 };
 
 export const listPendingRegistrations = async (req, res) => {
   const { page, from, to } = pageRange(req.query.page);
-  const { data, error } = await supabase
+  const { data, error, count } = await supabase
     .from('registrations')
-    .select('*, time_slots (*, students (*), programs (name))')
+    .select('*, time_slots (*, students (*), programs (name))', { count: 'exact' })
     .eq('status', 'pending')
     .range(from, to);
 
   if (error) return fail(res, 'admin.listPendingRegistrations', error);
-  res.json({ data, page, page_size: PAGE_SIZE });
+  res.json({ data, page, page_size: PAGE_SIZE, total: count ?? 0 });
 };
 
 export const reviewRegistration = async (req, res) => {

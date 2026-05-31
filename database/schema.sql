@@ -22,10 +22,11 @@ CREATE TYPE registration_status AS ENUM ('pending', 'approved', 'rejected');
 -- ============================================================
 
 -- users (parents + admins)
+-- Password is managed by Supabase Auth (architecture §3); no password_hash here.
+-- users.id mirrors auth.uid().
 CREATE TABLE users (
   id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
   email         VARCHAR(255)  NOT NULL UNIQUE,
-  password_hash VARCHAR(255)  NOT NULL,
   role          user_role     NOT NULL,
   name          VARCHAR(255)  NOT NULL,
   phone_number  VARCHAR(20)   NULL,
@@ -33,16 +34,12 @@ CREATE TABLE users (
   updated_at    TIMESTAMP     NOT NULL DEFAULT NOW()
 );
 
--- students (children registered by parents)
+-- students (children registered by parents) — fields per architecture §5
 CREATE TABLE students (
   id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
   parent_id     UUID          NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   student_name  VARCHAR(255)  NOT NULL,
-  student_email VARCHAR(255)  NULL,
-  student_phone VARCHAR(20)   NULL,
   age           INT           NOT NULL,
-  description   TEXT          NULL,
-  parent_name   VARCHAR(255)  NOT NULL,
   parent_email  VARCHAR(255)  NOT NULL,
   parent_phone  VARCHAR(20)   NOT NULL,
   created_at    TIMESTAMP     NOT NULL DEFAULT NOW(),
@@ -106,16 +103,17 @@ CREATE TABLE time_slots (
 
 -- registrations
 CREATE TABLE registrations (
-  id            UUID                 PRIMARY KEY DEFAULT gen_random_uuid(),
-  student_id    UUID                 NOT NULL REFERENCES students(id) ON DELETE CASCADE,
-  program_id    UUID                 NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
-  time_slot_id  UUID                 NOT NULL REFERENCES time_slots(id) ON DELETE CASCADE,
-  status        registration_status  NOT NULL DEFAULT 'pending',
-  submitted_at  TIMESTAMP            NOT NULL DEFAULT NOW(),
-  reviewed_at   TIMESTAMP            NULL,
-  reviewed_by   UUID                 NULL REFERENCES users(id) ON DELETE SET NULL,
-  created_at    TIMESTAMP            NOT NULL DEFAULT NOW(),
-  updated_at    TIMESTAMP            NOT NULL DEFAULT NOW(),
+  id               UUID                 PRIMARY KEY DEFAULT gen_random_uuid(),
+  student_id       UUID                 NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  program_id       UUID                 NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
+  time_slot_id     UUID                 NOT NULL REFERENCES time_slots(id) ON DELETE CASCADE,
+  first_class_date DATE                 NOT NULL,
+  status           registration_status  NOT NULL DEFAULT 'pending',
+  submitted_at     TIMESTAMP            NOT NULL DEFAULT NOW(),
+  reviewed_at      TIMESTAMP            NULL,
+  reviewed_by      UUID                 NULL REFERENCES users(id) ON DELETE SET NULL,
+  created_at       TIMESTAMP            NOT NULL DEFAULT NOW(),
+  updated_at       TIMESTAMP            NOT NULL DEFAULT NOW(),
 
   -- prevent duplicate registration to the same slot
   CONSTRAINT uq_student_slot UNIQUE (student_id, time_slot_id)

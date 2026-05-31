@@ -4,24 +4,16 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 
 export default function DashboardScreen() {
-  // Fetch students, teachers, and programs from the backend.
-  const { data: students, isLoading: studentsLoading } = useQuery({
-    queryKey: ['students'],
-    queryFn: () => apiClient.get('/admin/students'),
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['admin', 'summary'],
+    queryFn: () => apiClient.get('/admin/summary'),
   });
 
-  const { data: teachers, isLoading: teachersLoading } = useQuery({
-    queryKey: ['teachers'],
-    queryFn: () => apiClient.get('/admin/teachers'),
-  });
-
-  const { data: programs, isLoading: programsLoading } = useQuery({
-    queryKey: ['programs'],
-    queryFn: () => apiClient.get('/programs'),
-  });
-
-  if (studentsLoading || teachersLoading || programsLoading) {
+  if (isLoading) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
+  }
+  if (isError) {
+    return <View style={styles.container}><Text>Error loading dashboard.</Text></View>;
   }
 
   return (
@@ -29,18 +21,13 @@ export default function DashboardScreen() {
       <Text style={styles.header}>Dashboard</Text>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Total Students</Text>
-        <Text style={styles.cardValue}>{students?.length ?? '-'}</Text>
+        <Text style={styles.cardTitle}>Enrolled Students</Text>
+        <Text style={styles.cardValue}>{data?.enrolled_count ?? '-'}</Text>
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Total Teachers</Text>
-        <Text style={styles.cardValue}>{teachers?.length ?? '-'}</Text>
-      </View>
-
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Active Courses</Text>
-        <Text style={styles.cardValue}>{programs?.filter(p => p.status === 'active').length ?? '-'}</Text>
+        <Text style={styles.cardTitle}>Pending Registrations</Text>
+        <Text style={styles.cardValue}>{data?.pending_count ?? '-'}</Text>
       </View>
     </View>
   );
@@ -63,8 +50,8 @@ const styles = StyleSheet.create({
         padding: 20,
         borderRadius: 10,
         marginBottom: 15,
-        elevation: 3, // Shadow for Android
-        shadowColor: '#000', // Shadow for iOS
+        elevation: 3,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.1,
         shadowRadius: 4,

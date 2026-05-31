@@ -18,7 +18,7 @@ export default function CoursesPage() {
             <Text style={styles.header}>Courses</Text>
             <FlatList
                 data={data}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => String(item.id)}
                 renderItem={({ item }) => {
                     const slotInfo = item.time_slots
                         ?.map(slot => {

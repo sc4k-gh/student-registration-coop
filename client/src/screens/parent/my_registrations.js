@@ -28,7 +28,7 @@ export default function MyRegistrations() {
             <Text style={styles.header}>My Registrations</Text>
             <FlatList
                 data={allRegistrations}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => String(item.id)}
                 renderItem={({ item }) => (
                 <View style={styles.card}>
                     <Text style={styles.name}>{item.student_name}</Text>
