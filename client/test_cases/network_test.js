@@ -23,6 +23,6 @@ test('API returns a 404 error for an invalid endpoint', async () => {
 
 //Auth restricted endpoints should return a 401 error without proper role
 test('API returns a 401 error without necessary authorization', async () => {
-  const response = await apiClient.get('/invalidendpoint');
+  const response = await apiClient.get('/students');
   expect(response.status).toBe(401); // Ensure 401 error
 });

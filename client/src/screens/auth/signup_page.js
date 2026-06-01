@@ -17,8 +17,14 @@ export async function verifySubmission(name, emailAddress, phoneNumber, password
     if (password.length < 6) {
       return 'Password must be at least 6 characters long.';
     };
-    
-    return '';
+
+    if (/^(\d{10}|\d{3}-\d{3}-\d{4})$/.test(phoneNumber) === false) {
+      return 'Phone number must be formatted as either "xxx-xxx-xxxx" or "xxxxxxxxxx".';
+    };
+
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailAddress) === false) {
+      return 'Invalid email formatting.';
+    };
   };
 
 export default function Page() {
