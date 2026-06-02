@@ -4,6 +4,20 @@ import { Pressable, StyleSheet, TextInput, Text, View, TouchableOpacity } from '
 import apiClient from '../../api/client.js';
 import { useAuth } from '../../auth/AuthProvider.js';
 
+// Validates signup form fields. Returns an error message string, or an empty string ('') if valid.
+export function verifySubmission(name, emailAddress, phoneNumber, password, passwordconfirm) {
+  if (!name || !emailAddress || !password || !phoneNumber || !passwordconfirm) {
+    return 'All fields are required';
+  }
+  if (password !== passwordconfirm) {
+    return 'Both password fields must match.';
+  }
+  if (password.length < 6) {
+    return 'Password must be at least 6 characters long.';
+  }
+  return '';
+}
+
 export default function Page() {
   const { signIn } = useAuth();
   const navigation = useNavigation();

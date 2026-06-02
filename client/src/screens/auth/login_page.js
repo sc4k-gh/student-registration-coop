@@ -3,6 +3,14 @@ import React from 'react';
 import { Pressable, StyleSheet, TextInput, Text, View, TouchableOpacity } from 'react-native';
 import { useAuth } from '../../auth/AuthProvider.js';
 
+// Validates signup form fields. Returns an error message string, or an empty string ('') if valid.
+export function verifySubmission(emailAddress, password) {
+  if (!emailAddress || !password) {
+    return 'All fields are required';
+  }
+  return '';
+}
+
 export default function Page() {
   const { signIn } = useAuth();
   const navigation = useNavigation();
