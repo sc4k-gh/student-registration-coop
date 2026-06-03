@@ -5,7 +5,6 @@ import apiClient from '../../api/client.js';
 import { useAuth } from '../../auth/AuthProvider.js';
 
 export async function verifySubmission(name, emailAddress, phoneNumber, password, passwordconfirm) {
-    setErrorMessage('');
     if (!name || !emailAddress || !password || !phoneNumber || !passwordconfirm) {
       return 'All fields are required';
     };
@@ -43,10 +42,15 @@ export default function Page() {
   const handleSubmit = async () => {
 
     const validationError = verifySubmission(name, emailAddress, phoneNumber, password, passwordconfirm);
+
     if (validationError) {
       setErrorMessage(validationError);
       return;
     }
+
+    else {
+      setErrorMessage('');
+    };
 
     setSubmitting(true);
     const result = await apiClient.post('/auth/signup', {

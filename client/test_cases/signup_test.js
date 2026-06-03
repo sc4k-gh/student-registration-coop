@@ -5,6 +5,8 @@ describe('verifySubmission', () => {
     test('Signup throws no error if correct', () => {
         //Valid submission should return an empty string
         expect(verifySubmission('John Doe', 'Email@Address.com', '1234567890', 'GoodPass85', 'GoodPass85')).toBe('');
+        //Additional test for different valid phone number format
+        expect(verifySubmission('John Doe', 'Email@Address.com', '123-456-7890', 'GoodPass85', 'GoodPass85')).toBe('');
     });
 
     test('Signup throws correct error if password confirmation field does not match', () => {

@@ -1,7 +1,19 @@
 import apiClient from '../src/api/client.js';
 
-//Consider replacing with a dedicated test endpoint that just returns a short number or string later
-test('Database can be queried and return the expected data', async () => {
+/*
+//Commented out until corresponding endpoint is implemented: Improved basic database test.
+//Should return results directly instead of fetching from Supabase
+//For the sake of verifying whether an issue lies with the database or the API.
+
+test('Database can be queried', async () => {
+  const response = await apiClient.get('/test'); // Dedicated endpoint TBA
+
+  expect(response.status).toBe(200); // Ensure no error
+  expect(response.data).toBe('Test successful'); // Ensure result is non-empty
+});
+*/
+
+test('Supabase can be queried and return the expected data', async () => {
   const response = await apiClient.get('/programs');
 
   expect(response.status).toBe(200); // Ensure no error
@@ -21,8 +33,8 @@ test('API returns a 404 error for an invalid endpoint', async () => {
   expect(response.status).toBe(404); // Ensure 404 error
 });
 
-//Auth restricted endpoints should return a 401 error without proper role
-test('API returns a 401 error without necessary authorization', async () => {
+//Auth restricted endpoints should return a 401 error if access is attempted without a proper role
+test('API returns a 401 error if endpoint is accessed without necessary authorization', async () => {
   const response = await apiClient.get('/students');
   expect(response.status).toBe(401); // Ensure 401 error
 });
