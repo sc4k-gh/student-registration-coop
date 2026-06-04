@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, TextInput, Text, View, Platform } from 'react-na
 import apiClient from '../../api/client.js';
 import { useAuth } from '../../auth/AuthProvider.js';
 
-export async function verifySubmission(name, emailAddress, phoneNumber, password, passwordconfirm) {
+export function verifySubmission(name, emailAddress, phoneNumber, password, passwordconfirm) {
     if (!name || !emailAddress || !password || !phoneNumber || !passwordconfirm) {
       return 'All fields are required';
     };
@@ -45,6 +45,7 @@ export default function Page() {
 
     if (validationError) {
       setErrorMessage(validationError);
+      console.log(validationError);
       return;
     }
 
@@ -72,6 +73,7 @@ export default function Page() {
       setErrorMessage(signInError.message);
       return;
     }
+    console.log(errorMessage);
     navigation.navigate('Dashboard');
   };
 

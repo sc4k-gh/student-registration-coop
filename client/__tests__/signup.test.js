@@ -1,6 +1,30 @@
 import { useNavigation } from '@react-navigation/native';
 import { verifySubmission } from '../src/screens/auth/signup_page.js';
 
+//Mocks
+jest.mock('@react-native-picker/picker', () => {
+  const React = require('react');
+  const Picker = ({ children }) => React.createElement('div', null, children);
+  Picker.Item = ({ label }) => React.createElement('span', null, label);
+  return { Picker };
+});
+
+//useNavigation
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+  }),
+}));
+
+//fetch
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({}),
+  })
+);
+
 describe('verifySubmission', () => {
     test('Signup throws no error if correct', () => {
         //Valid submission should return an empty string

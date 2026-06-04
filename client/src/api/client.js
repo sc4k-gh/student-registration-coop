@@ -15,7 +15,7 @@ const getHeaders = async () => {
   };
 };
 
-const apiClient = {
+export const apiClient = {
   get: async (endpoint) =>
     fetch(`${BASE_URL}${endpoint}`, { headers: await getHeaders() }).then((r) => r.json()),
 

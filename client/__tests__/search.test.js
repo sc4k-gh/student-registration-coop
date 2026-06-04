@@ -1,5 +1,30 @@
 import { searchQuery } from '../src/screens/student_page.js';
 
+//Mocks
+jest.mock('@react-native-picker/picker', () => {
+  const React = require('react');
+  const Picker = ({ children }) => React.createElement('div', null, children);
+  Picker.Item = ({ label }) => React.createElement('span', null, label);
+  return { Picker };
+});
+
+//useNavigation
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({
+    navigate: jest.fn(),
+    goBack: jest.fn(),
+  }),
+}));
+
+//fetch
+global.fetch = jest.fn(() =>
+  Promise.resolve({
+    ok: true,
+    json: () => Promise.resolve({}),
+  })
+);
+
+
 const searchMode = 'student_name';
 const search = 'BA';
 //Dummy data for testing purposes
