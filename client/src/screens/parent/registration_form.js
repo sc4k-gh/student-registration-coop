@@ -5,6 +5,25 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Picker } from '@react-native-picker/picker';
 import apiClient from '../../api/client.js';
 
+// Validates registration form fields. Returns an error message string, or an empty string ('') if valid.
+export function verifySubmission(studentName, studentAge, parentEmail, parentPhone, selectedProgram, selectedMode, selectedTimeSlot, selectedLocation, firstClassDate) {
+  if (!studentName || !studentAge || !parentEmail || !parentPhone
+      || !selectedProgram || !selectedMode || !selectedTimeSlot) {
+    return 'Please fill in all required fields.';
+  }
+  const ageNum = parseInt(studentAge, 10);
+  if (!Number.isInteger(ageNum) || ageNum <= 0 || ageNum > 120) {
+    return 'Age must be a positive whole number.';
+  }
+  if (selectedMode === 'in-person' && !selectedLocation) {
+    return 'Please select a location for in-person mode.';
+  }
+  if (!firstClassDate) {
+    return 'No upcoming class date is available for this slot.';
+  }
+  return '';
+}
+
 // Schema-aligned with docs/architecture.md §5: students has only
 // (student_name, age, parent_email, parent_phone); parent_id is set server-side.
 // Registrations require (student_id, program_id, time_slot_id, first_class_date).

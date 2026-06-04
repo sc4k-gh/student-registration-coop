@@ -3,6 +3,18 @@ import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../../api/client.js';
 
+// Flattens student registrations into a single list for display.
+export function flattenRegistrations(data) {
+  if (!data) return [];
+  return data.flatMap(student =>
+    student.registrations?.map(reg => ({
+      ...reg,
+      student_name: student.student_name,
+      student_age: student.age,
+    })) || []
+  );
+}
+
 export default function MyRegistrations() {
     // Fetch all registrations of the current logged in user.
     const { data, isLoading, isError } = useQuery({
@@ -10,16 +22,8 @@ export default function MyRegistrations() {
         queryFn: () => apiClient.get('/registrations/my'),
     });
 
-    // Flatten registrations from students
-    const allRegistrations = data?.flatMap(student => 
-    student.registrations?.map(reg => ({
-        ...reg,
-        student_name: student.student_name,
-        student_age: student.age,
-    })) || []
-    ) || [];
-
-
+    const allRegistrations = flattenRegistrations(data);
+    
     if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
     if (isError) return <View style={styles.container}><Text>Error loading registrations.</Text></View>;
 
