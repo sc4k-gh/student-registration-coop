@@ -3,6 +3,11 @@ import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 
+// Returns the name of the student's first enrolled program, or a fallback string.
+export function getEnrolledProgram(registrations) {
+  return registrations?.[0]?.programs?.name ?? 'Not enrolled';
+}
+
 export default function StudentPage() {
     // Fetch all students, with their name, enrolled program, age, and parent contacts, from the backend.
     const { data, isLoading, isError } = useQuery({
