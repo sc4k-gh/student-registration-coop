@@ -17,7 +17,10 @@ const getHeaders = async () => {
 
 export const apiClient = {
   get: async (endpoint) =>
-    fetch(`${BASE_URL}${endpoint}`, { headers: await getHeaders() }).then((r) => r.json()),
+  fetch(`${BASE_URL}${endpoint}`, { headers: await getHeaders() }).then(async (r) => ({
+    status: r.status,
+    data: await r.json(),
+  })),
 
   post: async (endpoint, body) =>
     fetch(`${BASE_URL}${endpoint}`, {

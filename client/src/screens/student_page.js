@@ -7,10 +7,10 @@ import apiClient from '../api/client.js';
 //If search isn't empty, filter all results to rows that have a column equal to searchMode and a value equal to search
 export const searchQuery = (table, searchTerm, searchType) => {
     if (!table || Array.isArray(table) == false) {return []};
-    if (searchTerm !== '') {
+    if (searchTerm !== '' && searchTerm !== undefined) {
         return table.filter(item => item[searchType].toLowerCase().includes(searchTerm.toLowerCase()))
-    };
-    return table;
+    }
+    else {return table};
 };
 
 export default function StudentPage() {

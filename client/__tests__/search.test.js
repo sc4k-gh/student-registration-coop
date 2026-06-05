@@ -1,32 +1,8 @@
 import { searchQuery } from '../src/screens/student_page.js';
 
-//Mocks
-jest.mock('@react-native-picker/picker', () => {
-  const React = require('react');
-  const Picker = ({ children }) => React.createElement('div', null, children);
-  Picker.Item = ({ label }) => React.createElement('span', null, label);
-  return { Picker };
-});
-
-//useNavigation
-jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({
-    navigate: jest.fn(),
-    goBack: jest.fn(),
-  }),
-}));
-
-//fetch
-global.fetch = jest.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({}),
-  })
-);
-
-
 const searchMode = 'student_name';
 const search = 'BA';
+const searchTerm = 'student_name';
 //Dummy data for testing purposes
 const data = [
     { id: 'student1', student_name: 'Placeholder One', parent_name: 'Placeholder Mother', parent_id: 'parent1' },
@@ -64,13 +40,13 @@ describe('searchQuery', () => {
     });
 
     test('Search function returns the entire table if no search term is supplied', () => {
-        expect(searchQuery(data, undefined, searchMode)).toEqual([[
+        expect(searchQuery(data, '', searchMode)).toEqual([
             // If search is empty, the entire table should be returned
             { id: 'student1', student_name: 'Placeholder One', parent_name: 'Placeholder Mother', parent_id: 'parent1' },
             { id: 'student2', student_name: 'TBA Two', parent_name: 'TBA Father', parent_id: 'parent2' },
             { id: 'student3', student_name: 'Temporary Three', parent_name: 'Temporary Parent', parent_id: 'parent3' }
             ]
-        ]);
+        );
     });
 
     test("Search function returns an empty array if the search term doesn't match", () => {

@@ -12,7 +12,8 @@
   },
   "jest": {
   "preset": "jest-expo",
-  "testEnvironment": "jsdom"
+  "testEnvironment": "jsdom",
+  "setupFiles": ["./jest.setup.js"]
   },
   "dependencies": {
     "@react-native-picker/picker": "^2.11.4",
