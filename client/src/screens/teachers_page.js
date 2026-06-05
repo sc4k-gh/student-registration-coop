@@ -3,6 +3,16 @@ import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 
+// Extracts program names from a teacher's time slots.
+export function getTeacherPrograms(time_slots) {
+  return time_slots?.map(slot => slot.programs?.name).filter(Boolean).join(', ') || 'No courses assigned';
+}
+
+// Extracts time slot day/time info from a teacher's time slots.
+export function getTeacherTimeSlots(time_slots) {
+  return time_slots?.map(slot => `${slot.day_of_week} ${slot.start_time}-${slot.end_time}`).join(', ') || 'No time slots assigned';
+}
+
 export default function TeachersPage() {
     // Fetch all teachers, with their name, courses, age, and time slots, from the backend.
     const { data, isLoading, isError } = useQuery({

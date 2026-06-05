@@ -3,6 +3,14 @@ import { View, Text, FlatList, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 
+// Formats time slot capacity info for a program.
+export function getSlotInfo(time_slots) {
+  return time_slots?.map(slot => {
+    const isFull = slot.current_count >= slot.max_capacity;
+    return `${slot.current_count}/${slot.max_capacity}${isFull ? ' (full)' : ''}`;
+  }).join(', ') || 'No slots assigned';
+}
+
 export default function CoursesPage() {
     // Fetch programs time slot counts from the backend.
     const { data, isLoading, isError } = useQuery({
