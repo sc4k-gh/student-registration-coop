@@ -1,18 +1,5 @@
 import apiClient from '../src/api/client.js';
 
-/*
-//Commented out until corresponding endpoint is implemented: Improved basic database test.
-//Should return results directly instead of fetching from Supabase
-//For the sake of verifying whether an issue lies with the database or the API.
-
-test('Database can be queried', async () => {
-  const response = await apiClient.get('/test'); // Dedicated endpoint TBA
-
-  expect(response.status).toBe(200); // Ensure no error
-  expect(response.data).toBe('Test successful'); // Ensure result is non-empty
-});
-*/
-
 test('Supabase can be queried and return the expected data', async () => {
   const response = await apiClient.get('/programs');
 
