@@ -9,7 +9,7 @@ export function verifySubmission(name, emailAddress, phoneNumber, password, pass
       return 'All fields are required';
     };
     
-    if (password != passwordconfirm) {
+    if (password !== passwordconfirm) {
       return 'Both password fields must match.';
     };
     
@@ -40,15 +40,16 @@ export default function Page() {
 
   
   const handleSubmit = async () => {
-
+    
+    //Check for errors in submission formatting, set error message to first one found
     const validationError = verifySubmission(name, emailAddress, phoneNumber, password, passwordconfirm);
 
     if (validationError) {
       setErrorMessage(validationError);
-      console.log(validationError);
       return;
     }
-
+    
+    //If no errors are found in formatting, error message is empty
     else {
       setErrorMessage('');
     };
@@ -66,14 +67,15 @@ export default function Page() {
       setErrorMessage(result.error);
       return;
     }
-
+    //If no errors have been returned, try to sign in with provided credentials
     const { error: signInError } = await signIn(emailAddress, password);
     setSubmitting(false);
+
+    //If sign in error occurs, set error message to said error, otherwise navigate to dashboard
     if (signInError) {
       setErrorMessage(signInError.message);
       return;
     }
-    console.log(errorMessage);
     navigation.navigate('Dashboard');
   };
 
