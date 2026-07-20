@@ -23,26 +23,25 @@ export default function Page() {
     }
 
     setSubmitting(true);
-    const result = await apiClient.post('/auth/signup', {
-      name,
-      emailAddress,
-      password,
-      phone_number: phoneNumber,
-    });
+    try {
+      await apiClient.post('/auth/signup', {
+        name,
+        emailAddress,
+        password,
+        phone_number: phoneNumber,
+      });
 
-    if (result?.error) {
+      const { error: signInError } = await signIn(emailAddress, password);
+      if (signInError) {
+        setErrorMessage(signInError.message);
+        return;
+      }
+      navigation.navigate('Dashboard');
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
       setSubmitting(false);
-      setErrorMessage(result.error);
-      return;
     }
-
-    const { error: signInError } = await signIn(emailAddress, password);
-    setSubmitting(false);
-    if (signInError) {
-      setErrorMessage(signInError.message);
-      return;
-    }
-    navigation.navigate('Dashboard');
   };
 
   return (

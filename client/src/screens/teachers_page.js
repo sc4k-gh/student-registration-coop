@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, FlatList, StyleSheet } from 'react-native';
+import { View, Text, FlatList } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
+import { listStyles as styles } from '../styles/listStyles.js';
 
 export default function TeachersPage() {
     // Fetch all teachers, with their name, courses, age, and time slots, from the backend.
@@ -31,7 +32,7 @@ export default function TeachersPage() {
                     
                     return (
                         <View style={styles.card}>
-                            <Text style={styles.name}>{item.name}</Text>
+                            <Text style={styles.itemTitle}>{item.name}</Text>
                             <Text>Email: {item.email}</Text>
                             <Text>Phone: {item.phone_number}</Text>
                             <Text>Courses: {programs || 'No courses assigned'}</Text>
@@ -43,33 +44,3 @@ export default function TeachersPage() {
         </View>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 20,
-        backgroundColor: '#f5f5f5',
-    },
-    header: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 20,
-        marginTop: 20,
-    },
-    card: {
-        backgroundColor: 'white',
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 10,
-        elevation: 3,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
-    },
-    name: {
-        fontSize: 16,
-        fontWeight: 'bold',
-        marginBottom: 5,
-    },
-});

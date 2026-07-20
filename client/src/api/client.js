@@ -15,29 +15,43 @@ const getHeaders = async () => {
   };
 };
 
+// Throws on a non-2xx response so callers never receive an error body where they
+// expect data — react-query surfaces the throw as isError instead of handing a
+// `{ error }` object to code that expects an array.
+const request = async (endpoint, options = {}) => {
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
+    ...options,
+    headers: await getHeaders(),
+  });
+
+  const text = await response.text();
+  let payload = null;
+  if (text) {
+    try {
+      payload = JSON.parse(text);
+    } catch {
+      // Non-JSON body (e.g. an HTML 404 page from an unmounted route).
+      if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+      throw new Error('Server returned a malformed response');
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(payload?.error ?? `${response.status} ${response.statusText}`);
+  }
+  return payload;
+};
+
 const apiClient = {
-  get: async (endpoint) =>
-    fetch(`${BASE_URL}${endpoint}`, { headers: await getHeaders() }).then((r) => r.json()),
+  get: (endpoint) => request(endpoint),
 
-  post: async (endpoint, body) =>
-    fetch(`${BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers: await getHeaders(),
-      body: JSON.stringify(body),
-    }).then((r) => r.json()),
+  post: (endpoint, body) =>
+    request(endpoint, { method: 'POST', body: JSON.stringify(body) }),
 
-  patch: async (endpoint, body) =>
-    fetch(`${BASE_URL}${endpoint}`, {
-      method: 'PATCH',
-      headers: await getHeaders(),
-      body: JSON.stringify(body),
-    }).then((r) => r.json()),
+  patch: (endpoint, body) =>
+    request(endpoint, { method: 'PATCH', body: JSON.stringify(body) }),
 
-  delete: async (endpoint) =>
-    fetch(`${BASE_URL}${endpoint}`, {
-      method: 'DELETE',
-      headers: await getHeaders(),
-    }).then((r) => r.json()),
+  delete: (endpoint) => request(endpoint, { method: 'DELETE' }),
 };
 
 export default apiClient;

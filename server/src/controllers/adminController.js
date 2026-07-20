@@ -1,6 +1,8 @@
 import { supabase } from '../config/supabase.js';
+import { isValidEmail, isUuid } from '../utils/validation.js';
 
-const isValidEmail = (email) => /^\S+@\S+\.\S+$/.test(email);
+const MODES = ['online', 'in-person'];
+const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 
 export const listStudents = async (_req, res) => {
   const { data, error } = await supabase
@@ -76,9 +78,10 @@ export const updateProgram = async (req, res) => {
     .update({ status })
     .eq('id', req.params.id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) return res.status(500).json({ error: error.message });
+  if (!data) return res.status(404).json({ error: 'Program not found' });
   res.json(data);
 };
 
@@ -111,6 +114,22 @@ export const createTimeSlot = async (req, res) => {
       error: 'program_id, mode, day_of_week, start_time, end_time, and max_capacity are required',
     });
   }
+  if (!MODES.includes(mode)) {
+    return res.status(400).json({ error: `mode must be ${MODES.join(' or ')}` });
+  }
+  if (!DAYS.includes(day_of_week)) {
+    return res.status(400).json({ error: `day_of_week must be one of ${DAYS.join(', ')}` });
+  }
+  if (!Number.isInteger(max_capacity) || max_capacity <= 0) {
+    return res.status(400).json({ error: 'max_capacity must be a positive integer' });
+  }
+  // Mirrors chk_mode_location in schema.sql, which would otherwise fail as a 500.
+  if (mode === 'in-person' && !location_id) {
+    return res.status(400).json({ error: 'location_id is required for in-person slots' });
+  }
+  if (mode === 'online' && location_id) {
+    return res.status(400).json({ error: 'location_id is not allowed for online slots' });
+  }
 
   const { data, error } = await supabase
     .from('time_slots')
@@ -132,9 +151,12 @@ export const createTimeSlot = async (req, res) => {
 };
 
 export const listPendingRegistrations = async (_req, res) => {
+  // students embeds off registrations.student_id, not off time_slots — nesting it
+  // under time_slots resolves as a many-to-many through registrations and returns
+  // every student in the slot instead of the one who applied.
   const { data, error } = await supabase
     .from('registrations')
-    .select('*, time_slots (*, students (*), programs (name))')
+    .select('*, students (*), time_slots (*, programs (name))')
     .eq('status', 'pending');
 
   if (error) return res.status(500).json({ error: error.message });
@@ -156,8 +178,9 @@ export const reviewRegistration = async (req, res) => {
     })
     .eq('id', req.params.id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) return res.status(500).json({ error: error.message });
+  if (!data) return res.status(404).json({ error: 'Registration not found' });
   res.json(data);
 };

@@ -12,6 +12,7 @@ import CoursesPage from '../screens/courses_page';
 import RegistrationForm from '../screens/parent/registration_form';
 import LoginPage from '../screens/auth/login_page';
 import SignUpPage from '../screens/auth/signup_page';
+import RequireAuth from '../auth/RequireAuth';
 
 const Stack = createNativeStackNavigator();
 const Drawer = createDrawerNavigator();
@@ -33,8 +34,12 @@ export default function AppNavigator() {
         <NavigationContainer>
             <Stack.Navigator initialRouteName="Landing" screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="Landing" component={LandingPage} />
-                <Stack.Screen name="Dashboard" component={MainApp} />
-                <Stack.Screen name="Registration" component={RegistrationForm} />
+                <Stack.Screen name="Dashboard">
+                    {() => <RequireAuth><MainApp /></RequireAuth>}
+                </Stack.Screen>
+                <Stack.Screen name="Registration">
+                    {() => <RequireAuth><RegistrationForm /></RequireAuth>}
+                </Stack.Screen>
                 <Stack.Screen name="Login" component={LoginPage} />
                 <Stack.Screen name="SignUp" component={SignUpPage} />
             </Stack.Navigator>

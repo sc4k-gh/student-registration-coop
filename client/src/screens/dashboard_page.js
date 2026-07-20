@@ -5,23 +5,28 @@ import apiClient from '../api/client.js';
 
 export default function DashboardScreen() {
   // Fetch students, teachers, and programs from the backend.
-  const { data: students, isLoading: studentsLoading } = useQuery({
+  const { data: students, isLoading: studentsLoading, isError: studentsError } = useQuery({
     queryKey: ['students'],
     queryFn: () => apiClient.get('/admin/students'),
   });
 
-  const { data: teachers, isLoading: teachersLoading } = useQuery({
+  const { data: teachers, isLoading: teachersLoading, isError: teachersError } = useQuery({
     queryKey: ['teachers'],
     queryFn: () => apiClient.get('/admin/teachers'),
   });
 
-  const { data: programs, isLoading: programsLoading } = useQuery({
+  const { data: programs, isLoading: programsLoading, isError: programsError } = useQuery({
     queryKey: ['programs'],
     queryFn: () => apiClient.get('/programs'),
   });
 
   if (studentsLoading || teachersLoading || programsLoading) {
     return <View style={styles.container}><Text>Loading...</Text></View>;
+  }
+
+  // Without this a failed fetch renders as a legitimate "-", which reads as "no data".
+  if (studentsError || teachersError || programsError) {
+    return <View style={styles.container}><Text>Error loading dashboard.</Text></View>;
   }
 
   return (

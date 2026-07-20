@@ -1,6 +1,7 @@
 import { supabase } from '../config/supabase.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 
-export const requireAuth = async (req, res, next) => {
+export const requireAuth = asyncHandler(async (req, res, next) => {
   const header = req.headers.authorization;
   if (!header || !header.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'Authentication required' });
@@ -18,4 +19,4 @@ export const requireAuth = async (req, res, next) => {
     role: data.user.app_metadata?.role ?? null,
   };
   next();
-};
+});

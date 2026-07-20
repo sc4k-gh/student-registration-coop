@@ -16,3 +16,6 @@ node_modules/
 .env
 .env.local
 .env.*.local
+
+# Graphiy files
+graphify-out/

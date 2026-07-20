@@ -1,4 +1,5 @@
 import { supabase } from '../config/supabase.js';
+import { isValidEmail } from '../utils/validation.js';
 
 export const signup = async (req, res) => {
   const { emailAddress, password, name, phone_number } = req.body ?? {};
@@ -7,6 +8,9 @@ export const signup = async (req, res) => {
     return res
       .status(400)
       .json({ error: 'emailAddress, password, name, and phone_number are required' });
+  }
+  if (!isValidEmail(emailAddress)) {
+    return res.status(400).json({ error: 'invalid emailAddress' });
   }
 
   const { data: created, error: createErr } = await supabase.auth.admin.createUser({
@@ -22,10 +26,11 @@ export const signup = async (req, res) => {
 
   const authUser = created.user;
 
+  // Credentials live in Supabase Auth (auth.users); this table holds profile data
+  // only, keyed by the same id so RLS can match on auth.uid().
   const { error: insertErr } = await supabase.from('users').insert({
     id: authUser.id,
     email: emailAddress,
-    password_hash: 'supabase_managed',
     role: 'parent',
     name,
     phone_number,

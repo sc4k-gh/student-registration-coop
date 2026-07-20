@@ -88,18 +88,18 @@ student-registration-coop/
 
 ## Setup
 
-### 1. Clone the repository
+### 1. Clone the repository, setup the env variables
 ```bash
 git clone https://github.com/sc4k-gh/student-registration-coop.git
 cd student-registration-coop
+cp .env.example .env   # fill in your Supabase credentials
 ```
 
 ### 2. Backend (server)
 ```bash
 cd server
 npm install
-cp .env.example .env   # fill in your Supabase credentials
-node src/index.js
+npm start
 ```
 
 ### 3. Frontend (client)

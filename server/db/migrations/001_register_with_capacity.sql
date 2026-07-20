@@ -1,4 +1,6 @@
--- Atomic registration: insert + increment counter + capacity check.
+-- Atomic registration: capacity check + insert.
+-- The counter itself is owned by trg_registration_insert (see database/schema.sql);
+-- this function must NOT increment current_count or it will be counted twice.
 -- Apply once in the Supabase SQL editor.
 create or replace function public.register_with_capacity(
   p_student_id uuid,
@@ -23,11 +25,6 @@ begin
   insert into registrations (student_id, program_id, time_slot_id, status)
   values (p_student_id, p_program_id, p_time_slot_id, 'pending')
   returning * into v_row;
-
-  update time_slots
-     set current_count = current_count + 1,
-         updated_at = now()
-   where id = p_time_slot_id;
 
   return v_row;
 end;

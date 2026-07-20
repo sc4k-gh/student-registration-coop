@@ -144,11 +144,12 @@ This is a POC for a **tutoring academy** student registration mobile app (iOS + 
 ## 5. Database Schema
 
 ### `users`
+Profile data only — credentials are owned by Supabase Auth (`auth.users`). `id` mirrors `auth.uid()`.
+
 | Column | Type | Constraints | Notes |
 |--------|------|-------------|-------|
-| id | UUID | PK | |
+| id | UUID | PK | Same value as `auth.users.id` |
 | email | VARCHAR(255) | UNIQUE, NOT NULL | Login email |
-| password_hash | VARCHAR(255) | NOT NULL | bcrypt |
 | role | ENUM('admin','parent') | NOT NULL | Expandable later |
 | name | VARCHAR(255) | NOT NULL | |
 | phone_number | VARCHAR(20) | NULL | Required for parents |

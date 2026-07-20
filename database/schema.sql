@@ -22,10 +22,11 @@ CREATE TYPE registration_status AS ENUM ('pending', 'approved', 'rejected');
 -- ============================================================
 
 -- users (parents + admins)
+-- Profile data only. Credentials are owned by Supabase Auth (auth.users); id
+-- mirrors auth.uid() so RLS policies can key off it directly.
 CREATE TABLE users (
   id            UUID          PRIMARY KEY DEFAULT gen_random_uuid(),
   email         VARCHAR(255)  NOT NULL UNIQUE,
-  password_hash VARCHAR(255)  NOT NULL,
   role          user_role     NOT NULL,
   name          VARCHAR(255)  NOT NULL,
   phone_number  VARCHAR(20)   NULL,

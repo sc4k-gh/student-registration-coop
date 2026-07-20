@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, Modal, StyleSheet, Pressable } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'; 
 import apiClient from '../../api/client.js'; 
@@ -24,6 +24,8 @@ export default function RegistrationForm() {
     const [selectedMode, setSelectedMode] = useState('');
     const [selectedLocation, setSelectedLocation] = useState('');
     const [selectedTimeSlot, setSelectedTimeSlot] = useState('');
+
+    const [submitting, setSubmitting] = useState(false);
 
     //Set up navigation
     const navigation = useNavigation()
@@ -56,13 +58,13 @@ export default function RegistrationForm() {
 
     const handleSubmit = async () => {
       // Validate required fields; if any are empty, don't accept the submission.
-      if (!studentName 
-        || !studentAge 
-        || !parentName 
-        || !parentEmail 
-        || !parentPhone 
-        || !selectedProgram 
-        || !selectedMode 
+      if (!studentName
+        || !studentAge
+        || !parentName
+        || !parentEmail
+        || !parentPhone
+        || !selectedProgram
+        || !selectedMode
         ||!selectedTimeSlot) {
           alert('Please fill in all required fields');
           return;
@@ -72,14 +74,22 @@ export default function RegistrationForm() {
           return;
       }
 
+      // keyboardType is a hint, not validation — the field can still hold non-digits.
+      const age = parseInt(studentAge, 10);
+      if (Number.isNaN(age)) {
+          alert('Please enter a valid age');
+          return;
+      }
+
       // First create the new student, then the new registration.
+      setSubmitting(true);
       try {
           // Add new student data to backend:
           const studentData = await apiClient.post('/students', {
               student_name: studentName,
               student_email: studentEmail,
               student_phone: studentPhone,
-              age: parseInt(studentAge),
+              age,
               description: studentDescription,
               parent_name: parentName,
               parent_email: parentEmail,
@@ -93,10 +103,25 @@ export default function RegistrationForm() {
               time_slot_id: selectedTimeSlot,
           });
 
+          // Clear the form so a success can't be resubmitted as a duplicate.
+          setStudentName('');
+          setStudentEmail('');
+          setStudentPhone('');
+          setStudentAge('');
+          setStudentDescription('');
+          setParentName('');
+          setParentEmail('');
+          setParentPhone('');
+          setSelectedProgram('');
+          setSelectedMode('');
+          setSelectedLocation('');
+          setSelectedTimeSlot('');
+
           alert('Registration submitted successfully!');
-          // Navigate back or clear form
       } catch (error) {
           alert('Error submitting registration: ' + error.message);
+      } finally {
+          setSubmitting(false);
       }
   };
         
@@ -211,7 +236,11 @@ export default function RegistrationForm() {
                 ) : (
                     <Picker
                         selectedValue={selectedProgram}
-                        onValueChange={(itemValue) => setSelectedProgram(itemValue)}>
+                        onValueChange={(itemValue) => {
+                            setSelectedProgram(itemValue);
+                            // The slot list is scoped to the program, so any prior pick is stale.
+                            setSelectedTimeSlot('');
+                        }}>
                         <Picker.Item label="Select a program" value="" />
                         {programs?.map((program) => (
                             <Picker.Item
@@ -229,7 +258,10 @@ export default function RegistrationForm() {
             <Text style={styles.label}>Mode *</Text>
                 <Picker
                     selectedValue={selectedMode}
-                    onValueChange={(itemValue) => setSelectedMode(itemValue)}>
+                    onValueChange={(itemValue) => {
+                        setSelectedMode(itemValue);
+                        setSelectedTimeSlot('');
+                    }}>
                     <Picker.Item label="Select mode" value="" />
                     <Picker.Item label="Online" value="online" />
                     <Picker.Item label="In-person" value="in-person" />
@@ -242,7 +274,10 @@ export default function RegistrationForm() {
                     <Text style={styles.label}>Location *</Text>
                     <Picker
                         selectedValue={selectedLocation}
-                        onValueChange={(itemValue) => setSelectedLocation(itemValue)}>
+                        onValueChange={(itemValue) => {
+                            setSelectedLocation(itemValue);
+                            setSelectedTimeSlot('');
+                        }}>
                         <Picker.Item label="Select location" value="" />
                         {locations?.map((location) => (
                             <Picker.Item
@@ -256,7 +291,7 @@ export default function RegistrationForm() {
         )}
 
         { /* TIME SLOT PICKER: */}
-        {selectedProgram && selectedMode && (
+        {Boolean(selectedProgram && selectedMode) && (
             <View style={styles.section}>
                 <Text style={styles.label}>Time Slot *</Text>
                 {timeSlotsLoading ? (
@@ -280,9 +315,12 @@ export default function RegistrationForm() {
 
         {/* FORM SUBMISSION BUTTON */}
         <TouchableOpacity
-            style={styles.submitButton}
-            onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Submit Registration</Text>
+            style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={submitting}>
+            <Text style={styles.submitButtonText}>
+                {submitting ? 'Submitting...' : 'Submit Registration'}
+            </Text>
         </TouchableOpacity>
 
         {/* LANDING PAGE/RETURN BUTTON */}
@@ -354,6 +392,9 @@ const styles = StyleSheet.create({
       alignItems: 'center',
       marginTop: 20,
       marginBottom: 30,
+  },
+  submitButtonDisabled: {
+      opacity: 0.5,
   },
   submitButtonText: {
       color: 'white',
