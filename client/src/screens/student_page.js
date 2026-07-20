@@ -4,6 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 import { listStyles as styles } from '../styles/listStyles.js';
 
+// Returns the name of the student's first enrolled program, or a fallback string.
+export function getEnrolledProgram(registrations) {
+  return registrations?.[0]?.programs?.name ?? 'Not enrolled';
+}
+
 export default function StudentPage() {
     // Fetch all students, with their name, enrolled program, age, and parent contacts, from the backend.
     const { data, isLoading, isError } = useQuery({
@@ -18,14 +23,13 @@ export default function StudentPage() {
         <View style={styles.container}>
             <Text style={styles.header}>Students</Text>
             <FlatList
-                data={data}
-                keyExtractor={(item) => item.id}
+                data={data?.data ?? []}
+                keyExtractor={(item) => String(item.id)}
                 renderItem={({ item }) => (
                     <View style={styles.card}>
                         <Text style={styles.itemTitle}>{item.student_name}</Text>
                         <Text>Age: {item.age}</Text>
                         <Text>Enrolled Program: {item.registrations?.[0]?.programs?.name ?? 'Not enrolled'}</Text>
-                        <Text>Parent: {item.parent_name}</Text>
                         <Text>Parent Email: {item.parent_email}</Text>
                         <Text>Parent Phone: {item.parent_phone}</Text>
                     </View>

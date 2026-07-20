@@ -4,6 +4,14 @@ import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 import { listStyles as styles } from '../styles/listStyles.js';
 
+// Formats time slot capacity info for a program.
+export function getSlotInfo(time_slots) {
+  return time_slots?.map(slot => {
+    const isFull = slot.current_count >= slot.max_capacity;
+    return `${slot.current_count}/${slot.max_capacity}${isFull ? ' (full)' : ''}`;
+  }).join(', ') || 'No slots assigned';
+}
+
 export default function CoursesPage() {
     // Fetch programs time slot counts from the backend.
     const { data, isLoading, isError } = useQuery({
@@ -19,7 +27,7 @@ export default function CoursesPage() {
             <Text style={styles.header}>Courses</Text>
             <FlatList
                 data={data}
-                keyExtractor={(item) => item.id}
+                keyExtractor={(item) => String(item.id)}
                 renderItem={({ item }) => {
                     const slotInfo = item.time_slots
                         ?.map(slot => {

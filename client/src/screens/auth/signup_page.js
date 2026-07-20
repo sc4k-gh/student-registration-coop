@@ -1,8 +1,22 @@
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native';
+import { Pressable, StyleSheet, TextInput, Text, View, TouchableOpacity } from 'react-native';
 import apiClient from '../../api/client.js';
 import { useAuth } from '../../auth/AuthProvider.js';
+
+// Validates signup form fields. Returns an error message string, or an empty string ('') if valid.
+export function verifySubmission(name, emailAddress, phoneNumber, password, passwordconfirm) {
+  if (!name || !emailAddress || !password || !phoneNumber || !passwordconfirm) {
+    return 'All fields are required';
+  }
+  if (password !== passwordconfirm) {
+    return 'Both password fields must match.';
+  }
+  if (password.length < 6) {
+    return 'Password must be at least 6 characters long.';
+  }
+  return '';
+}
 
 export default function Page() {
   const { signIn } = useAuth();
@@ -10,6 +24,7 @@ export default function Page() {
 
   const [emailAddress, setEmailAddress] = React.useState('');
   const [password, setPassword] = React.useState('');
+  const [passwordconfirm, setPasswordConfirm] = React.useState('');
   const [name, setName] = React.useState('');
   const [phoneNumber, setPhoneNumber] = React.useState('');
   const [errorMessage, setErrorMessage] = React.useState('');
@@ -21,6 +36,16 @@ export default function Page() {
       setErrorMessage('All fields are required');
       return;
     }
+    
+    if (password != passwordconfirm) {
+      setErrorMessage('Both password fields must match.')
+      return;
+    }
+    
+    if (password.length < 6) {
+      setErrorMessage('Password must be at least 6 characters long.')
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -30,18 +55,19 @@ export default function Page() {
         password,
         phone_number: phoneNumber,
       });
-
-      const { error: signInError } = await signIn(emailAddress, password);
-      if (signInError) {
-        setErrorMessage(signInError.message);
-        return;
-      }
-      navigation.navigate('Dashboard');
     } catch (error) {
-      setErrorMessage(error.message);
-    } finally {
       setSubmitting(false);
+      setErrorMessage(error.message);
+      return;
     }
+
+    const { error: signInError } = await signIn(emailAddress, password);
+    setSubmitting(false);
+    if (signInError) {
+      setErrorMessage(signInError.message);
+      return;
+    }
+    // AppNavigator swaps the stack automatically when isSignedIn flips.
   };
 
   return (
@@ -88,20 +114,28 @@ export default function Page() {
         secureTextEntry
         onChangeText={setPassword}
       />
+      
+      <Text style={styles.label}>Confirm password</Text>
+      <TextInput
+        style={styles.input}
+        value={passwordconfirm}
+        placeholder="Enter password"
+        placeholderTextColor="#666666"
+        secureTextEntry
+        onChangeText={setPasswordConfirm}
+      />
 
       {!!errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
 
-      <Pressable
-        style={({ pressed }) => [
-          styles.button,
-          submitting && styles.buttonDisabled,
-          pressed && styles.buttonPressed,
-        ]}
+      <TouchableOpacity
+        style={[styles.submitButton, submitting && {opacity: 0.5}]}
         onPress={handleSubmit}
         disabled={submitting}
       >
-        <Text style={styles.buttonText}>Sign up</Text>
-      </Pressable>
+        <Text style={styles.buttonText}>
+          {submitting ? 'Submitting...' : 'Sign Up'}
+          </Text>
+      </TouchableOpacity>
 
       <View style={styles.linkContainer}>
         <Text>Already have an account? </Text>
@@ -121,7 +155,7 @@ export default function Page() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, gap: 12 },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
+  title: { fontSize: 24, fontWeight: 'bold', marginTop: 20, marginBottom: 8 },
   label: { fontWeight: '600', fontSize: 14 },
   input: {
     borderWidth: 1,
@@ -131,18 +165,23 @@ const styles = StyleSheet.create({
     fontSize: 16,
     backgroundColor: '#fff',
   },
-  button: {
-    backgroundColor: '#0a7ea4',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
   buttonPressed: { opacity: 0.7 },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: '#fff', fontWeight: '600' },
   secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
   linkContainer: { flexDirection: 'row', gap: 4, marginTop: 12, alignItems: 'center' },
   error: { color: '#d32f2f', fontSize: 12 },
+  submitButton: {
+    backgroundColor: '#007AFF',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  submitButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });

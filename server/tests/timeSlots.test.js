@@ -6,8 +6,10 @@ import { mockSupabase, resetRecording, queryFor } from './helpers.js';
 const PROGRAM_ID = '00000000-0000-0000-0000-000000000011';
 const LOCATION_ID = '00000000-0000-0000-0000-000000000021';
 
-const FULL_SLOT = { id: 's1', current_count: 5, max_capacity: 5 };
-const OPEN_SLOT = { id: 's2', current_count: 2, max_capacity: 5 };
+// Both slots share a weekday so FULL_SLOT is excluded by capacity, not by the
+// day filter — the listing is { next_date, slots } and picks the soonest open day.
+const FULL_SLOT = { id: 's1', current_count: 5, max_capacity: 5, day_of_week: 'mon' };
+const OPEN_SLOT = { id: 's2', current_count: 2, max_capacity: 5, day_of_week: 'mon' };
 
 vi.mock('../src/config/supabase.js', () => ({
   supabase: mockSupabase({ rows: [FULL_SLOT, OPEN_SLOT] }),
@@ -45,7 +47,7 @@ describe('GET /time-slots — filtering', () => {
     expect(res.status).toBe(200);
     // Naming the excluded slot, so a broken filter fails on identity rather than on
     // a predicate that an empty array would also satisfy.
-    expect(res.body).toEqual([OPEN_SLOT]);
+    expect(res.body.slots).toEqual([OPEN_SLOT]);
   });
 
   it('scopes the query to the requested program and mode', async () => {
