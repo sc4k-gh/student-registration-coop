@@ -13,11 +13,13 @@ This is a POC for a tutoring academy student registration system. It supports tw
 
 | Layer | Technology |
 |-------|-----------|
-| Mobile App | React Native (Expo) |
-| State Management | React Query |
-| Backend API | Node.js (Express) |
+| Mobile App | React Native 0.86 (Expo SDK 57) |
+| Navigation | React Navigation (native stack + drawer) |
+| State Management | React Query (TanStack Query v5) |
+| Backend API | Node.js (Express 4, ES modules) |
 | Database | PostgreSQL (Supabase) |
 | Authentication | Supabase Auth |
+| Server Tests | Vitest + Supertest |
 | Build & Deploy | EAS Build → App Store / Google Play |
 | API Hosting | Render |
 
@@ -26,12 +28,18 @@ This is a POC for a tutoring academy student registration system. It supports tw
 ```
 student-registration-coop/
 ├── client/                        # React Native (Expo) mobile app
+│   ├── index.js                   # Expo entry point, registers App
+│   ├── app.json                   # Expo app config
+│   ├── .env.example               # EXPO_PUBLIC_API_URL, Supabase URL + anon key
 │   └── src/
 │       ├── App.js                 # Root component, wraps providers and navigation
 │       ├── api/
-│       │   └── client.js          # Axios/fetch instance with base URL and auth headers
-│       ├── context/
-│       │   └── AuthContext.js     # React context for auth state (user, token, login/logout)
+│       │   └── client.js          # Fetch wrapper with base URL and auth headers
+│       ├── auth/
+│       │   ├── AuthProvider.js    # Auth context: session, role, login/logout
+│       │   └── RequireAuth.js     # Gate that redirects unauthenticated users
+│       ├── lib/
+│       │   └── supabase.js        # Supabase client (SecureStore-backed session)
 │       ├── navigation/
 │       │   └── AppNavigator.js    # Stack/drawer navigator setup and route definitions
 │       ├── screens/
@@ -39,7 +47,7 @@ student-registration-coop/
 │       │   │   ├── login_page.js  # Email + password login form
 │       │   │   └── signup_page.js # Parent sign-up form
 │       │   ├── parent/
-│       │   │   └── registration_form.js  # Student registration form (multi-step with calendar)
+│       │   │   └── registration_form.js  # Student registration form (multi-step)
 │       │   ├── dashboard_page.js  # Admin dashboard with summary metrics
 │       │   ├── courses_page.js    # Admin view: list of programs/courses
 │       │   ├── student_page.js    # Admin view: students table with filters
@@ -47,38 +55,71 @@ student-registration-coop/
 │       │   ├── settings_page.js   # App settings and preferences
 │       │   └── landing_page.js    # Welcome screen with "Get Started" CTA
 │       ├── styles/
-│       │   └── theme.js           # Shared colors, fonts, spacing constants
+│       │   └── listStyles.js      # Shared styles for list/table screens
 │       └── assets/                # App icons, splash images
 ├── server/                        # Node.js Express API
-│   ├── package.json               # Server dependencies (express, supabase-js, cors, etc.)
-│   ├── .env.example               # Template for env vars (SUPABASE_URL, SUPABASE_KEY, PORT)
+│   ├── package.json               # express, @supabase/supabase-js, cors, dotenv
+│   ├── vitest.config.js           # Test runner config
+│   ├── .env.example               # PORT, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+│   ├── db/
+│   │   └── migrations/
+│   │       └── 001_register_with_capacity.sql  # RPC: atomic register + capacity check
+│   ├── tests/                     # Vitest + Supertest API tests
 │   └── src/
-│       ├── index.js               # Express app setup, middleware registration, route mounting
+│       ├── index.js               # Express app setup, route mounting, error handler
 │       ├── config/
 │       │   └── supabase.js        # Initialize and export Supabase client instance
 │       ├── middleware/
 │       │   ├── auth.js            # Verify Supabase JWT from Authorization header
-│       │   └── roleGuard.js       # Check user role (admin/parent) before allowing access
+│       │   ├── roleGuard.js       # Check user role (admin/parent) before allowing access
+│       │   └── validateUuidParam.js  # Reject malformed UUID route params
 │       ├── routes/
-│       │   ├── auth.js            # Routes: signup, login, setup-password
-│       │   ├── programs.js        # Routes: list all programs
-│       │   ├── locations.js       # Routes: list all locations
-│       │   ├── timeSlots.js       # Routes: list available slots filtered by program/mode/location
-│       │   ├── registrations.js   # Routes: parent submits registration, views own status
-│       │   └── admin.js           # Routes: admin CRUD for students, teachers, registrations, programs
-│       └── controllers/
-│           ├── authController.js          # Logic for signup, login, admin password setup
-│           ├── programController.js       # Logic for fetching/creating programs
-│           ├── locationController.js      # Logic for fetching locations
-│           ├── timeSlotController.js      # Logic for fetching/creating slots, capacity checks
-│           ├── registrationController.js  # Logic for submitting registration, updating current_count
-│           └── adminController.js         # Logic for admin views, approve/reject registrations
+│       │   ├── auth.js            # signup, login, setup-password
+│       │   ├── programs.js        # list all programs
+│       │   ├── locations.js       # list all locations
+│       │   ├── timeSlots.js       # list available slots filtered by program/mode/location
+│       │   ├── registrations.js   # parent submits registration, views own status
+│       │   ├── students.js        # create a student record
+│       │   └── admin.js           # admin CRUD for students, teachers, programs, slots, registrations
+│       ├── controllers/
+│       │   ├── authController.js          # Signup, login, admin password setup
+│       │   ├── programController.js       # Fetching/creating programs
+│       │   ├── locationController.js      # Fetching locations
+│       │   ├── timeSlotController.js      # Fetching/creating slots, capacity checks
+│       │   ├── studentController.js       # Creating student records
+│       │   ├── registrationController.js  # Submitting registration, updating current_count
+│       │   └── adminController.js         # Admin views, approve/reject registrations
+│       └── utils/
+│           ├── asyncHandler.js    # Forwards async route errors to the error handler
+│           └── validation.js      # Shared request payload validators
 ├── database/
-│   ├── schema.sql                 # CREATE TABLE statements for all 7 tables
+│   ├── schema.sql                 # Enums + CREATE TABLE for all 7 tables
 │   └── seed.sql                   # Seed data (admin email, sample programs, locations)
 └── docs/
     └── architecture.md            # System design documentation
 ```
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/auth/signup` | Parent sign-up |
+| POST | `/auth/login` | Email + password login |
+| POST | `/auth/setup-password` | Set password (authenticated) |
+| GET | `/programs` | List programs |
+| GET | `/locations` | List locations |
+| GET | `/time-slots` | List available slots (filterable) |
+| POST | `/students` | Create a student |
+| POST | `/registrations` | Submit a registration |
+| GET | `/registrations/my` | Parent's own registrations |
+| GET | `/admin/students` | List all students |
+| GET | `/admin/teachers` | List teachers |
+| GET | `/admin/teachers/:id/students` | Students for a teacher |
+| POST | `/admin/teachers` | Create a teacher |
+| GET / POST / PATCH | `/admin/programs[/:id]` | Read, create, update programs |
+| POST | `/admin/time-slots` | Create a time slot |
+| GET | `/admin/registrations` | List pending registrations |
+| PATCH | `/admin/registrations/:id` | Approve/reject a registration |
 
 ## Prerequisites
 
@@ -88,28 +129,47 @@ student-registration-coop/
 
 ## Setup
 
-### 1. Clone the repository, setup the env variables
+### 1. Clone the repository
 ```bash
 git clone https://github.com/sc4k-gh/student-registration-coop.git
 cd student-registration-coop
-cp .env.example .env   # fill in your Supabase credentials
 ```
 
-### 2. Backend (server)
+### 2. Database
+In the Supabase SQL editor, run in order:
+1. `database/schema.sql`
+2. `database/seed.sql`
+3. `server/db/migrations/001_register_with_capacity.sql`
+
+### 3. Backend (server)
 ```bash
 cd server
+cp .env.example .env   # PORT, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY (all required)
 npm install
-npm start
+npm start              # or: npm run dev  (nodemon)
 ```
 
-### 3. Frontend (client)
+`PORT` has no default — the server exits at startup if it is unset.
+
+### 4. Frontend (client)
 ```bash
 cd client
+cp .env.example .env   # EXPO_PUBLIC_API_URL + Supabase URL and anon key
 npm install
 npx expo start
 ```
+
+Point `EXPO_PUBLIC_API_URL` at your machine's LAN IP (not `localhost`) when testing on a physical device.
 
 ## Running the App
 
 - **Physical device**: Scan the QR code with Expo Go (Android) or Camera app (iOS)
 - **Emulator**: Press `a` (Android) or `i` (iOS) in the terminal
+- **Web**: Press `w` in the terminal
+
+## Tests
+
+```bash
+cd server
+npm test
+```
