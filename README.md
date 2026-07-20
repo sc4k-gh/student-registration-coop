@@ -31,6 +31,7 @@ student-registration-coop/
 │   ├── index.js                   # Expo entry point, registers App
 │   ├── app.json                   # Expo app config
 │   ├── .env.example               # EXPO_PUBLIC_API_URL, Supabase URL + anon key
+│   ├── __tests__/                 # Jest + RNTL screen tests (32 tests, 7 suites)
 │   └── src/
 │       ├── App.js                 # Root component, wraps providers and navigation
 │       ├── api/
@@ -47,7 +48,8 @@ student-registration-coop/
 │       │   │   ├── login_page.js  # Email + password login form
 │       │   │   └── signup_page.js # Parent sign-up form
 │       │   ├── parent/
-│       │   │   └── registration_form.js  # Student registration form (multi-step)
+│       │   │   ├── registration_form.js  # Student registration form (multi-step)
+│       │   │   └── my_registrations.js   # Parent view: own registrations + status
 │       │   ├── dashboard_page.js  # Admin dashboard with summary metrics
 │       │   ├── courses_page.js    # Admin view: list of programs/courses
 │       │   ├── student_page.js    # Admin view: students table with filters
@@ -61,10 +63,7 @@ student-registration-coop/
 │   ├── package.json               # express, @supabase/supabase-js, cors, dotenv
 │   ├── vitest.config.js           # Test runner config
 │   ├── .env.example               # PORT, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
-│   ├── db/
-│   │   └── migrations/
-│   │       └── 001_register_with_capacity.sql  # RPC: atomic register + capacity check
-│   ├── tests/                     # Vitest + Supertest API tests
+│   ├── tests/                     # Vitest + Supertest API tests (45 tests, 7 suites)
 │   └── src/
 │       ├── index.js               # Express app setup, route mounting, error handler
 │       ├── config/
@@ -94,7 +93,9 @@ student-registration-coop/
 │           └── validation.js      # Shared request payload validators
 ├── database/
 │   ├── schema.sql                 # Enums + CREATE TABLE for all 7 tables
-│   └── seed.sql                   # Seed data (admin email, sample programs, locations)
+│   ├── register_with_capacity.sql # RPC: atomic capacity check + registration insert
+│   ├── review_registration.sql    # RPC: admin approve/reject
+│   └── seed.sql                   # Currently empty — no seed data committed
 └── docs/
     └── architecture.md            # System design documentation
 ```
@@ -138,8 +139,11 @@ cd student-registration-coop
 ### 2. Database
 In the Supabase SQL editor, run in order:
 1. `database/schema.sql`
-2. `database/seed.sql`
-3. `server/db/migrations/001_register_with_capacity.sql`
+2. `database/register_with_capacity.sql`
+3. `database/review_registration.sql`
+
+`database/seed.sql` exists but is currently empty, so there is no sample data —
+create the admin user and a program manually, or fill the file in.
 
 ### 3. Backend (server)
 ```bash
@@ -169,7 +173,18 @@ Point `EXPO_PUBLIC_API_URL` at your machine's LAN IP (not `localhost`) when test
 
 ## Tests
 
+Backend — Vitest + Supertest against a mocked Supabase client (45 tests, 7 suites):
+
 ```bash
 cd server
+npm test
+```
+
+Frontend — Jest + React Native Testing Library (32 tests, 7 suites). These cover the
+exported helpers on each screen (`verifySubmission`, `getSlotInfo`, `flattenRegistrations`,
+`getTeacherPrograms`, `getEnrolledProgram`), not full render trees:
+
+```bash
+cd client
 npm test
 ```
