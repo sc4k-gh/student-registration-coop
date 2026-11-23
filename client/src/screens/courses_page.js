@@ -3,22 +3,28 @@ import { View, Text, FlatList } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 import { listStyles as styles } from '../styles/listStyles.js';
+import { EmptyState, ErrorView, LoadingView } from '../components/StateViews.js';
 
 export default function CoursesPage() {
     // Fetch programs time slot counts from the backend.
-    const { data, isLoading, isError } = useQuery({
+    const { data, isLoading, isError, refetch } = useQuery({
         queryKey: ['programs'],
         queryFn: () => apiClient.get('/programs'),
     });
 
-    if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
-    if (isError) return <View style={styles.container}><Text>Error loading courses.</Text></View>;
+    // Use the shared views for loading and failed requests.
+    if (isLoading) return <LoadingView />;
+    if (isError) {
+        return <ErrorView message="Error loading courses." onRetry={refetch} />;
+    }
 
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Courses</Text>
             <FlatList
                 data={data}
+                // Show this message when the request succeeds but returns no courses.
+                ListEmptyComponent={<EmptyState text="No courses yet" />}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => {
                     const slotInfo = item.time_slots
