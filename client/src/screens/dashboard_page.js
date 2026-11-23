@@ -2,31 +2,59 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
+import { ErrorView, LoadingView } from '../components/StateViews.js';
 
 export default function DashboardScreen() {
   // Fetch students, teachers, and programs from the backend.
-  const { data: students, isLoading: studentsLoading, isError: studentsError } = useQuery({
+  const {
+    data: students,
+    isLoading: studentsLoading,
+    isError: studentsError,
+    refetch: refetchStudents,
+  } = useQuery({
     queryKey: ['students'],
     queryFn: () => apiClient.get('/admin/students'),
   });
 
-  const { data: teachers, isLoading: teachersLoading, isError: teachersError } = useQuery({
+  const {
+    data: teachers,
+    isLoading: teachersLoading,
+    isError: teachersError,
+    refetch: refetchTeachers,
+  } = useQuery({
     queryKey: ['teachers'],
     queryFn: () => apiClient.get('/admin/teachers'),
   });
 
-  const { data: programs, isLoading: programsLoading, isError: programsError } = useQuery({
+  const {
+    data: programs,
+    isLoading: programsLoading,
+    isError: programsError,
+    refetch: refetchPrograms,
+  } = useQuery({
     queryKey: ['programs'],
     queryFn: () => apiClient.get('/programs'),
   });
 
+  // Retry all dashboard data requests together.
+  const refetchDashboard = () => Promise.all([
+    refetchStudents(),
+    refetchTeachers(),
+    refetchPrograms(),
+  ]);
+
   if (studentsLoading || teachersLoading || programsLoading) {
-    return <View style={styles.container}><Text>Loading...</Text></View>;
+    return <LoadingView />;
   }
 
-  // Without this a failed fetch renders as a legitimate "-", which reads as "no data".
+  // Show the shared error view if any dashboard request failed.
   if (studentsError || teachersError || programsError) {
-    return <View style={styles.container}><Text>Error loading dashboard.</Text></View>;
+    return (
+      <ErrorView
+        message="Error loading dashboard."
+        onRetry={refetchDashboard}
+      />
+    );
   }
 
   return (

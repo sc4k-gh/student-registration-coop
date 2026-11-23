@@ -9,6 +9,7 @@ import StudentPage from '../screens/student_page';
 import TeachersPage from '../screens/teachers_page';
 import SettingsPage from '../screens/settings_page';
 import CoursesPage from '../screens/courses_page';
+import RegistrationsPage from '../screens/registrations_page';
 import RegistrationForm from '../screens/parent/registration_form';
 import LoginPage from '../screens/auth/login_page';
 import SignUpPage from '../screens/auth/signup_page';
@@ -24,6 +25,7 @@ function MainApp() {
             <Drawer.Screen name="Students" component={StudentPage} />
             <Drawer.Screen name="Teachers" component={TeachersPage} />
             <Drawer.Screen name="Courses" component={CoursesPage} />
+            <Drawer.Screen name="Registrations" component={RegistrationsPage} />
             <Drawer.Screen name="Settings" component={SettingsPage} />
         </Drawer.Navigator>
     );

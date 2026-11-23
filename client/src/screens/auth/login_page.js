@@ -1,4 +1,5 @@
 
+
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -58,7 +59,11 @@ export default function Page() {
 
       navigation.navigate('Dashboard');
     } catch (error) {
-      setErrorMessage(error.message);
+      setErrorMessage(
+        error instanceof Error && error.message
+          ? `Unable to connect to authentication: ${error.message}`
+          : 'Unable to connect to authentication',
+      );
     } finally {
       setSubmitting(false);
     }

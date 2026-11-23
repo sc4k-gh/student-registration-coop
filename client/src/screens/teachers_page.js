@@ -3,22 +3,28 @@ import { View, Text, FlatList } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 import { listStyles as styles } from '../styles/listStyles.js';
+import { EmptyState, ErrorView, LoadingView } from '../components/StateViews.js';
 
 export default function TeachersPage() {
     // Fetch all teachers, with their name, courses, age, and time slots, from the backend.
-    const { data, isLoading, isError } = useQuery({
+    const { data, isLoading, isError, refetch } = useQuery({
         queryKey: ['teachers'],
         queryFn: () => apiClient.get('/admin/teachers'),
     });
 
-    if (isLoading) return <View style={styles.container}><Text>Loading...</Text></View>;
-    if (isError) return <View style={styles.container}><Text>Error loading teachers.</Text></View>;
+    // Use the shared views for loading and failed requests.
+    if (isLoading) return <LoadingView />;
+    if (isError) {
+        return <ErrorView message="Error loading teachers." onRetry={refetch} />;
+    }
 
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Teachers</Text>
             <FlatList
                 data={data}
+                // Show this message when the request succeeds but returns no teachers.
+                ListEmptyComponent={<EmptyState text="No teachers yet" />}
                 keyExtractor={(item) => item.id}
                 renderItem={({ item }) => {
                     const programs = item.time_slots
