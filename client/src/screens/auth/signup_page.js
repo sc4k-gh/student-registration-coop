@@ -31,12 +31,14 @@ export default function Page() {
         phone_number: phoneNumber,
       });
 
-      const { error: signInError } = await signIn(emailAddress, password);
+      const { data: signInData, error: signInError } = await signIn(emailAddress, password);
       if (signInError) {
         setErrorMessage(signInError.message);
         return;
       }
-      navigation.navigate('Dashboard');
+
+      const userRole = signInData?.user?.app_metadata?.role ?? 'parent';
+      navigation.navigate(userRole === 'admin' ? 'Dashboard' : 'Registration');
     } catch (error) {
       setErrorMessage(error.message);
     } finally {

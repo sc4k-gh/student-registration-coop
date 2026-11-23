@@ -6,8 +6,8 @@ import { useAuth } from './AuthProvider.js';
 // Screens whose backend routes sit behind requireAuth need to wait for the stored
 // session to be restored before deciding — otherwise a returning signed-in user
 // briefly renders as signed out.
-export default function RequireAuth({ children }) {
-    const { isSignedIn, loading } = useAuth();
+export default function RequireAuth({ children, requiredRole }) {
+    const { isSignedIn, loading, user } = useAuth();
     const navigation = useNavigation();
 
     if (loading) {
@@ -19,6 +19,17 @@ export default function RequireAuth({ children }) {
             <View style={styles.container}>
                 <Text style={styles.message}>Please sign in to continue.</Text>
                 <Button title="Sign in" onPress={() => navigation.navigate('Login')} />
+            </View>
+        );
+    }
+
+    const userRole = user?.app_metadata?.role ?? 'parent';
+    if (requiredRole && userRole !== requiredRole) {
+        const targetScreen = userRole === 'admin' ? 'Dashboard' : 'Registration';
+        return (
+            <View style={styles.container}>
+                <Text style={styles.message}>{requiredRole === 'admin' ? 'Admin access required.' : 'This section is for parents.'}</Text>
+                <Button title={userRole === 'admin' ? 'Open dashboard' : 'Go to registration'} onPress={() => navigation.navigate(targetScreen)} />
             </View>
         );
     }

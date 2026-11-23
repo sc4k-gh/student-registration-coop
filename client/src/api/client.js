@@ -1,4 +1,5 @@
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL;
+console.log('API address:', BASE_URL);
 
 let _getToken = null;
 
@@ -24,6 +25,7 @@ const request = async (endpoint, options = {}) => {
     headers: await getHeaders(),
   });
 
+  console.log('API response status:', response.status);
   const text = await response.text();
   let payload = null;
   if (text) {

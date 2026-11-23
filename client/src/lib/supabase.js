@@ -6,8 +6,16 @@ import * as SecureStore from 'expo-secure-store';
 const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY are required');
+if (
+  !supabaseUrl ||
+  !supabaseAnonKey ||
+  supabaseUrl.includes('<your-project>') ||
+  supabaseAnonKey.startsWith('YOUR_') ||
+  supabaseAnonKey.includes('<anon key')
+) {
+  throw new Error(
+    'EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY are required and must not contain placeholder values.',
+  );
 }
 
 // expo-secure-store is a native module (iOS Keychain / Android Keystore) with no web

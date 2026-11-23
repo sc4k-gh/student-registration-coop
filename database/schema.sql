@@ -111,6 +111,7 @@ CREATE TABLE registrations (
   student_id    UUID                 NOT NULL REFERENCES students(id) ON DELETE CASCADE,
   program_id    UUID                 NOT NULL REFERENCES programs(id) ON DELETE CASCADE,
   time_slot_id  UUID                 NOT NULL REFERENCES time_slots(id) ON DELETE CASCADE,
+  first_class_date DATE              NOT NULL,
   status        registration_status  NOT NULL DEFAULT 'pending',
   submitted_at  TIMESTAMP            NOT NULL DEFAULT NOW(),
   reviewed_at   TIMESTAMP            NULL,

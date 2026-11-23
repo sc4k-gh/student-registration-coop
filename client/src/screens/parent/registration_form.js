@@ -1,10 +1,58 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Pressable } from 'react-native';
+import { View, Text, TextInput, ScrollView, TouchableOpacity, StyleSheet, Pressable, Platform } from 'react-native';
 import { useNavigation } from '@react-navigation/native'
 import { useQuery } from '@tanstack/react-query'; 
 import apiClient from '../../api/client.js'; 
 import { Picker } from '@react-native-picker/picker';
  
+function SelectionField({ selectedValue, onValueChange, placeholder, options }) {
+    const [expanded, setExpanded] = useState(false);
+
+    if (Platform.OS !== 'web') {
+        return (
+            <Picker selectedValue={selectedValue} onValueChange={onValueChange}>
+                <Picker.Item label={placeholder} value="" />
+                {options.map((option) => (
+                    <Picker.Item key={option.value} label={option.label} value={option.value} />
+                ))}
+            </Picker>
+        );
+    }
+
+    const selectedOption = options.find((option) => option.value === selectedValue);
+
+    return (
+        <View>
+            <Pressable
+                accessibilityRole="button"
+                accessibilityState={{ expanded }}
+                style={styles.selectButton}
+                onPress={() => setExpanded((value) => !value)}
+            >
+                <Text style={styles.selectValue}>{selectedOption?.label ?? placeholder}</Text>
+                <Text style={styles.selectChevron}>{expanded ? '▲' : '▼'}</Text>
+            </Pressable>
+            {expanded && (
+                <View style={styles.selectOptions}>
+                    {[{ label: placeholder, value: '' }, ...options].map((option) => (
+                        <Pressable
+                            key={option.value || 'placeholder'}
+                            accessibilityRole="button"
+                            style={styles.selectOption}
+                            onPress={() => {
+                                onValueChange(option.value);
+                                setExpanded(false);
+                            }}
+                        >
+                            <Text style={styles.selectValue}>{option.label}</Text>
+                        </Pressable>
+                    ))}
+                </View>
+            )}
+        </View>
+    );
+}
+
 export default function RegistrationForm() {
     /* Set up all form content via useState(). */
     // Student Information:
@@ -31,17 +79,32 @@ export default function RegistrationForm() {
     const navigation = useNavigation()
 
     // Fetch programs locations, and time slots from the backend.
-    const { data: programs, isLoading: programsLoading } = useQuery({
+    const {
+        data: programs,
+        isLoading: programsLoading,
+        isError: programsError,
+        error: programsErrorDetails,
+    } = useQuery({
         queryKey: ['programs'],
         queryFn: () => apiClient.get('/programs'),
         });
     
-    const { data: locations, isLoading: locationsLoading } = useQuery({
+    const {
+        data: locations,
+        isLoading: locationsLoading,
+        isError: locationsError,
+        error: locationsErrorDetails,
+    } = useQuery({
         queryKey: ['locations'],
         queryFn: () => apiClient.get('/locations'),
         });
     
-        const { data: timeSlots, isLoading: timeSlotsLoading } = useQuery({
+        const {
+            data: timeSlots,
+            isLoading: timeSlotsLoading,
+            isError: timeSlotsError,
+            error: timeSlotsErrorDetails,
+        } = useQuery({
             queryKey: ['timeSlots', selectedProgram, selectedMode, selectedLocation],
             queryFn: async () => {
                 const params = new URLSearchParams({
@@ -52,8 +115,10 @@ export default function RegistrationForm() {
                 const result = await apiClient.get(`/time-slots?${params}`);
                 return result; 
         },
-        // Fetching for time slots is enabled only when we already have program and mode.
-        enabled: !!selectedProgram && !!selectedMode,
+        enabled:
+            !!selectedProgram &&
+            !!selectedMode &&
+            (selectedMode !== 'in-person' || !!selectedLocation),
     });
 
     const handleSubmit = async () => {
@@ -233,60 +298,71 @@ export default function RegistrationForm() {
                 <Text style={styles.label}>Program *</Text>
                 {programsLoading ? (
                     <Text>Loading programs...</Text>
+                ) : programsError ? (
+                    <Text style={styles.inlineError}>
+                        Could not load programs: {programsErrorDetails?.message || 'Please try again.'}
+                    </Text>
+                ) : !programs?.length ? (
+                    <Text>No active programs are available.</Text>
                 ) : (
-                    <Picker
+                    <SelectionField
                         selectedValue={selectedProgram}
+                        placeholder="Select a program"
+                        options={programs.map((program) => ({
+                            label: program.name,
+                            value: program.id,
+                        }))}
                         onValueChange={(itemValue) => {
                             setSelectedProgram(itemValue);
                             // The slot list is scoped to the program, so any prior pick is stale.
                             setSelectedTimeSlot('');
-                        }}>
-                        <Picker.Item label="Select a program" value="" />
-                        {programs?.map((program) => (
-                            <Picker.Item
-                                key={program.id}
-                                label={program.name}
-                                value={program.id}
-                            />
-                        ))}
-                    </Picker>
+                        }}
+                    />
                 )}
             </View>
 
         { /* MODE PICKER: */}
         <View style={styles.section}>
             <Text style={styles.label}>Mode *</Text>
-                <Picker
+                <SelectionField
                     selectedValue={selectedMode}
+                    placeholder="Select mode"
+                    options={[
+                        { label: 'Online', value: 'online' },
+                        { label: 'In-person', value: 'in-person' },
+                    ]}
                     onValueChange={(itemValue) => {
                         setSelectedMode(itemValue);
+                        setSelectedLocation('');
                         setSelectedTimeSlot('');
-                    }}>
-                    <Picker.Item label="Select mode" value="" />
-                    <Picker.Item label="Online" value="online" />
-                    <Picker.Item label="In-person" value="in-person" />
-                </Picker>
+                    }}
+                />
         </View>
 
         { /* LOCATION PICKER (only used if mode selected is "in-person"): */}
         {selectedMode === 'in-person' && (
             <View style={styles.section}>
                     <Text style={styles.label}>Location *</Text>
-                    <Picker
-                        selectedValue={selectedLocation}
-                        onValueChange={(itemValue) => {
-                            setSelectedLocation(itemValue);
-                            setSelectedTimeSlot('');
-                        }}>
-                        <Picker.Item label="Select location" value="" />
-                        {locations?.map((location) => (
-                            <Picker.Item
-                                key={location.id}
-                                label={location.name}
-                                value={location.id}
-                            />
-                        ))}
-                    </Picker>
+                    {locationsLoading ? (
+                        <Text>Loading locations...</Text>
+                    ) : locationsError ? (
+                        <Text style={styles.inlineError}>
+                            Could not load locations: {locationsErrorDetails?.message || 'Please try again.'}
+                        </Text>
+                    ) : (
+                        <SelectionField
+                            selectedValue={selectedLocation}
+                            placeholder="Select location"
+                            options={(locations ?? []).map((location) => ({
+                                label: location.name,
+                                value: location.id,
+                            }))}
+                            onValueChange={(itemValue) => {
+                                setSelectedLocation(itemValue);
+                                setSelectedTimeSlot('');
+                            }}
+                        />
+                    )}
             </View>
         )}
 
@@ -294,21 +370,26 @@ export default function RegistrationForm() {
         {Boolean(selectedProgram && selectedMode) && (
             <View style={styles.section}>
                 <Text style={styles.label}>Time Slot *</Text>
-                {timeSlotsLoading ? (
+                {selectedMode === 'in-person' && !selectedLocation ? (
+                    <Text>Select a location to see available time slots.</Text>
+                ) : timeSlotsLoading ? (
                     <Text>Loading time slots...</Text>
+                ) : timeSlotsError ? (
+                    <Text style={styles.inlineError}>
+                        Could not load time slots: {timeSlotsErrorDetails?.message || 'Please try again.'}
+                    </Text>
+                ) : !timeSlots?.length ? (
+                    <Text>No available time slots for this selection. Try another program, mode, or location.</Text>
                 ) : (
-                    <Picker
+                    <SelectionField
                         selectedValue={selectedTimeSlot}
-                        onValueChange={(itemValue) => setSelectedTimeSlot(itemValue)}>
-                        <Picker.Item label="Select time slot" value="" />
-                        {timeSlots?.map((slot) => (
-                            <Picker.Item
-                                key={slot.id}
-                                label={`${slot.day_of_week} ${slot.start_time}-${slot.end_time} (${slot.current_count}/${slot.max_capacity})`}
-                                value={slot.id}
-                            />
-                        ))}
-                    </Picker>
+                        placeholder="Select time slot"
+                        options={timeSlots.map((slot) => ({
+                            label: `${slot.day_of_week} ${slot.start_time}-${slot.end_time} (${slot.current_count}/${slot.max_capacity})`,
+                            value: slot.id,
+                        }))}
+                        onValueChange={setSelectedTimeSlot}
+                    />
                 )}
             </View>
         )}
@@ -366,6 +447,41 @@ const styles = StyleSheet.create({
         fontSize: 14,
         marginBottom: 5,
         color: '#333',
+    },
+    inlineError: {
+        color: '#b00020',
+    },
+    selectButton: {
+        minHeight: 48,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        paddingHorizontal: 12,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        backgroundColor: '#fafafa',
+    },
+    selectOptions: {
+        marginTop: 4,
+        borderWidth: 1,
+        borderColor: '#ccc',
+        borderRadius: 5,
+        backgroundColor: '#fff',
+    },
+    selectOption: {
+        paddingVertical: 12,
+        paddingHorizontal: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: '#eee',
+    },
+    selectValue: {
+        color: '#222',
+        fontSize: 16,
+    },
+    selectChevron: {
+        color: '#555',
+        fontSize: 12,
     },
     input: {
         borderWidth: 1,

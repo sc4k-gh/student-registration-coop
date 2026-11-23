@@ -1,6 +1,18 @@
 import { supabase } from '../config/supabase.js';
 import { isUuid } from '../utils/validation.js';
 
+const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+
+const nextClassDate = (dayOfWeek, now = new Date()) => {
+  const targetDay = WEEKDAYS.indexOf(dayOfWeek);
+  if (targetDay < 0) return null;
+
+  const date = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const daysUntilClass = (targetDay - date.getUTCDay() + 7) % 7;
+  date.setUTCDate(date.getUTCDate() + daysUntilClass);
+  return date.toISOString().slice(0, 10);
+};
+
 export const listMine = async (req, res) => {
   const { data, error } = await supabase
     .from('students')
@@ -38,7 +50,7 @@ export const create = async (req, res) => {
   // can name one program while consuming a seat in another program's slot.
   const { data: slot, error: slotErr } = await supabase
     .from('time_slots')
-    .select('id, program_id')
+    .select('id, program_id, day_of_week')
     .eq('id', time_slot_id)
     .maybeSingle();
 
@@ -47,11 +59,16 @@ export const create = async (req, res) => {
   if (slot.program_id !== program_id) {
     return res.status(400).json({ error: 'time_slot_id does not belong to program_id' });
   }
+  const firstClassDate = nextClassDate(slot.day_of_week);
+  if (!firstClassDate) {
+    return res.status(500).json({ error: 'Time slot has an invalid day_of_week' });
+  }
 
   const { data, error } = await supabase.rpc('register_with_capacity', {
     p_student_id: student_id,
     p_program_id: program_id,
     p_time_slot_id: time_slot_id,
+    p_first_class_date: firstClassDate,
   });
 
   if (error) {

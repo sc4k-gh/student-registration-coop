@@ -13,7 +13,7 @@ vi.mock('../src/config/supabase.js', () => ({
     user: parentUser,
     rowsByTable: {
       students: [{ id: STUDENT_ID, parent_id: parentUser.id }],
-      time_slots: [{ id: SLOT_ID, program_id: SLOT_PROGRAM_ID }],
+      time_slots: [{ id: SLOT_ID, program_id: SLOT_PROGRAM_ID, day_of_week: 'tue' }],
     },
     rpcData: { id: 'reg-1' },
   }),

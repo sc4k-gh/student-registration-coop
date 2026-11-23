@@ -15,13 +15,15 @@ export default function Page() {
   const handleSubmit = async () => {
     setErrorMessage('');
     setSubmitting(true);
-    const { error } = await signIn(emailAddress, password);
+    const { data, error } = await signIn(emailAddress, password);
     setSubmitting(false);
     if (error) {
       setErrorMessage(error.message);
       return;
     }
-    navigation.navigate('Dashboard');
+
+    const userRole = data?.user?.app_metadata?.role ?? 'parent';
+    navigation.navigate(userRole === 'admin' ? 'Dashboard' : 'Registration');
   };
 
   return (

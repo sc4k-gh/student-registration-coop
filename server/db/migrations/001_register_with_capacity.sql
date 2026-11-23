@@ -3,8 +3,9 @@
 -- this function must NOT increment current_count or it will be counted twice.
 -- Apply once in the Supabase SQL editor.
 create or replace function public.register_with_capacity(
-  p_student_id uuid,
+  p_first_class_date date,
   p_program_id uuid,
+  p_student_id uuid,
   p_time_slot_id uuid
 ) returns registrations
 language plpgsql
@@ -22,8 +23,8 @@ begin
     raise exception 'time slot full' using errcode = 'P0001';
   end if;
 
-  insert into registrations (student_id, program_id, time_slot_id, status)
-  values (p_student_id, p_program_id, p_time_slot_id, 'pending')
+  insert into registrations (student_id, program_id, time_slot_id, first_class_date, status)
+  values (p_student_id, p_program_id, p_time_slot_id, p_first_class_date, 'pending')
   returning * into v_row;
 
   return v_row;

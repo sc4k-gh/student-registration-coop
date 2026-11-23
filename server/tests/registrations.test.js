@@ -10,7 +10,13 @@ const PROGRAM_ID = '00000000-0000-0000-0000-0000000000c1';
 const OTHER_PARENT_STUDENT = [];
 
 vi.mock('../src/config/supabase.js', () => ({
-  supabase: mockSupabase({ user: parentUser }),
+  supabase: mockSupabase({
+    user: parentUser,
+    rowsByTable: {
+      students: [{ id: STUDENT_ID, parent_id: parentUser.id }],
+      time_slots: [{ id: SLOT_ID, program_id: PROGRAM_ID, day_of_week: 'tue' }],
+    },
+  }),
 }));
 
 let app;
@@ -34,6 +40,26 @@ describe('POST /registrations — guards', () => {
       .set('Authorization', 'Bearer token')
       .send({});
     expect(res.status).toBe(400);
+  });
+});
+
+describe('POST /registrations — first class date', () => {
+  it('passes the next slot weekday to the registration RPC', async () => {
+    const res = await request(app)
+      .post('/registrations')
+      .set('Authorization', 'Bearer token')
+      .send({ student_id: STUDENT_ID, program_id: PROGRAM_ID, time_slot_id: SLOT_ID });
+
+    expect(res.status).toBe(201);
+    const rpcArgs = supabase.rpc.mock.calls[0][0] === 'register_with_capacity'
+      ? supabase.rpc.mock.calls[0][1]
+      : null;
+    expect(rpcArgs).toMatchObject({
+      p_student_id: STUDENT_ID,
+      p_program_id: PROGRAM_ID,
+      p_time_slot_id: SLOT_ID,
+    });
+    expect(new Date(`${rpcArgs.p_first_class_date}T00:00:00Z`).getUTCDay()).toBe(2);
   });
 });
 

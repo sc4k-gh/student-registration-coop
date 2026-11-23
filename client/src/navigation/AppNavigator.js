@@ -7,6 +7,7 @@ import LandingPage from '../screens/landing_page';
 import DashboardScreen from '../screens/dashboard_page';
 import StudentPage from '../screens/student_page';
 import TeachersPage from '../screens/teachers_page';
+import TeacherForm from '../screens/teacher_form';
 import SettingsPage from '../screens/settings_page';
 import CoursesPage from '../screens/courses_page';
 import RegistrationForm from '../screens/parent/registration_form';
@@ -20,11 +21,26 @@ const Drawer = createDrawerNavigator();
 function MainApp() {
     return (
         <Drawer.Navigator initialRouteName="Overview">
-            <Drawer.Screen name="Overview" component={DashboardScreen} />
-            <Drawer.Screen name="Students" component={StudentPage} />
-            <Drawer.Screen name="Teachers" component={TeachersPage} />
-            <Drawer.Screen name="Courses" component={CoursesPage} />
-            <Drawer.Screen name="Settings" component={SettingsPage} />
+            <Drawer.Screen
+                name="Overview"
+                component={DashboardScreen}
+            />
+            <Drawer.Screen
+                name="Students"
+                component={StudentPage}
+            />
+            <Drawer.Screen
+                name="Teachers"
+                component={TeachersPage}
+            />
+            <Drawer.Screen
+                name="Courses"
+                component={CoursesPage}
+            />
+            <Drawer.Screen
+                name="Settings"
+                component={SettingsPage}
+            />
         </Drawer.Navigator>
     );
 }
@@ -32,16 +48,54 @@ function MainApp() {
 export default function AppNavigator() {
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName="Landing" screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="Landing" component={LandingPage} />
+            <Stack.Navigator
+                initialRouteName="Landing"
+                screenOptions={{ headerShown: false }}
+            >
+                <Stack.Screen
+                    name="Landing"
+                    component={LandingPage}
+                />
+
                 <Stack.Screen name="Dashboard">
-                    {() => <RequireAuth><MainApp /></RequireAuth>}
+                    {() => (
+                        <RequireAuth requiredRole="admin">
+                            <MainApp />
+                        </RequireAuth>
+                    )}
                 </Stack.Screen>
+
                 <Stack.Screen name="Registration">
-                    {() => <RequireAuth><RegistrationForm /></RequireAuth>}
+                    {() => (
+                        <RequireAuth requiredRole="parent">
+                            <RegistrationForm />
+                        </RequireAuth>
+                    )}
                 </Stack.Screen>
-                <Stack.Screen name="Login" component={LoginPage} />
-                <Stack.Screen name="SignUp" component={SignUpPage} />
+
+                <Stack.Screen
+                    name="TeacherForm"
+                    options={{
+                        headerShown: true,
+                        title: 'Add Teacher',
+                    }}
+                >
+                    {(props) => (
+                        <RequireAuth requiredRole="admin">
+                            <TeacherForm {...props} />
+                        </RequireAuth>
+                    )}
+                </Stack.Screen>
+
+                <Stack.Screen
+                    name="Login"
+                    component={LoginPage}
+                />
+
+                <Stack.Screen
+                    name="SignUp"
+                    component={SignUpPage}
+                />
             </Stack.Navigator>
         </NavigationContainer>
     );
