@@ -1,7 +1,13 @@
+
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
-import { Pressable, StyleSheet, TextInput, Text, View } from 'react-native';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../../auth/AuthProvider.js';
+import FloatingInput from '../../components/FloatingInput.js';
+import {
+  isValidEmail,
+  isStrongEnough,
+} from '../../utils/validators.js';
 
 export default function Page() {
   const { signIn } = useAuth();
@@ -9,56 +15,96 @@ export default function Page() {
 
   const [emailAddress, setEmailAddress] = React.useState('');
   const [password, setPassword] = React.useState('');
+
+  // Individual validation errors
+  const [emailError, setEmailError] = React.useState('');
+  const [passwordError, setPasswordError] = React.useState('');
+
+  // Server error
   const [errorMessage, setErrorMessage] = React.useState('');
+
   const [submitting, setSubmitting] = React.useState(false);
 
   const handleSubmit = async () => {
     setErrorMessage('');
-    setSubmitting(true);
-    const { error } = await signIn(emailAddress, password);
-    setSubmitting(false);
-    if (error) {
-      setErrorMessage(error.message);
+
+    // Validate email and password
+    const emailError = !isValidEmail(emailAddress.trim())
+      ? 'Please enter a valid email address'
+      : '';
+
+    const passwordError = !isStrongEnough(password)
+      ? 'Password must be at least 6 characters'
+      : '';
+
+    // Update error states
+    setEmailError(emailError);
+    setPasswordError(passwordError);
+
+    // Stop if either field is invalid
+    if (emailError || passwordError) {
       return;
     }
-    navigation.navigate('Dashboard');
+
+    setSubmitting(true);
+
+    try {
+      const { error } = await signIn(emailAddress.trim(), password);
+
+      if (error) {
+        setErrorMessage(error.message);
+        return;
+      }
+
+      navigation.navigate('Dashboard');
+    } catch (error) {
+      setErrorMessage(error.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Sign in</Text>
 
-      <Text style={styles.label}>Email address</Text>
-      <TextInput
-        style={styles.input}
-        autoCapitalize="none"
+      <FloatingInput
+        label="Email address"
         value={emailAddress}
-        placeholder="Enter email"
-        placeholderTextColor="#666666"
         onChangeText={setEmailAddress}
+        error={emailError}
         keyboardType="email-address"
+        autoCapitalize="none"
       />
 
-      <Text style={styles.label}>Password</Text>
-      <TextInput
-        style={styles.input}
+      {!!emailError && (
+        <Text style={styles.error}>{emailError}</Text>
+      )}
+
+      <FloatingInput
+        label="Password"
         value={password}
-        placeholder="Enter password"
-        placeholderTextColor="#666666"
-        secureTextEntry
         onChangeText={setPassword}
+        error={passwordError}
+        secureTextEntry
       />
 
-      {!!errorMessage && <Text style={styles.error}>{errorMessage}</Text>}
+      {!!passwordError && (
+        <Text style={styles.error}>{passwordError}</Text>
+      )}
+
+      {!!errorMessage && (
+        <Text style={styles.error}>{errorMessage}</Text>
+      )}
 
       <Pressable
         style={({ pressed }) => [
           styles.button,
-          (!emailAddress || !password || submitting) && styles.buttonDisabled,
+          submitting && styles.buttonDisabled,
           pressed && styles.buttonPressed,
         ]}
         onPress={handleSubmit}
-        disabled={!emailAddress || !password || submitting}
+        disabled={submitting}
       >
         <Text style={styles.buttonText}>Continue</Text>
       </Pressable>
@@ -72,7 +118,9 @@ export default function Page() {
 
       <View style={styles.linkContainer}>
         <Pressable onPress={() => navigation.navigate('Landing')}>
-          <Text style={styles.secondaryButtonText}>Back to landing page</Text>
+          <Text style={styles.secondaryButtonText}>
+            Back to landing page
+          </Text>
         </Pressable>
       </View>
     </View>
@@ -82,15 +130,7 @@ export default function Page() {
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, gap: 12 },
   title: { fontSize: 24, fontWeight: 'bold', marginBottom: 8 },
-  label: { fontWeight: '600', fontSize: 14 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
+
   button: {
     backgroundColor: '#0a7ea4',
     paddingVertical: 12,
@@ -99,10 +139,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 8,
   },
+
   buttonPressed: { opacity: 0.7 },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: '#fff', fontWeight: '600' },
   secondaryButtonText: { color: '#0a7ea4', fontWeight: '600' },
-  linkContainer: { flexDirection: 'row', gap: 4, marginTop: 12, alignItems: 'center' },
+
+  linkContainer: {
+    flexDirection: 'row',
+    gap: 4,
+    marginTop: 12,
+    alignItems: 'center',
+  },
+
   error: { color: '#d32f2f', fontSize: 12 },
 });
