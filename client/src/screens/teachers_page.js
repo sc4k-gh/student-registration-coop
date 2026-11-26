@@ -1,11 +1,12 @@
+
 import React from 'react';
-import { View, Text, FlatList } from 'react-native';
+import { View, Text, FlatList, Button } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../api/client.js';
 import { listStyles as styles } from '../styles/listStyles.js';
 import { EmptyState, ErrorView, LoadingView } from '../components/StateViews.js';
 
-export default function TeachersPage() {
+export default function TeachersPage({ navigation }) {
     // Fetch all teachers, with their name, courses, age, and time slots, from the backend.
     const { data, isLoading, isError, refetch } = useQuery({
         queryKey: ['teachers'],
@@ -21,6 +22,12 @@ export default function TeachersPage() {
     return (
         <View style={styles.container}>
             <Text style={styles.header}>Teachers</Text>
+
+            <Button
+                title="+ Add teacher"
+                onPress={() => navigation.navigate('TeacherForm')}
+            />
+
             <FlatList
                 data={data}
                 // Show this message when the request succeeds but returns no teachers.
@@ -35,7 +42,7 @@ export default function TeachersPage() {
                     const timeSlots = item.time_slots
                         ?.map(slot => `${slot.day_of_week} ${slot.start_time}-${slot.end_time}`)
                         .join(', ');
-                    
+
                     return (
                         <View style={styles.card}>
                             <Text style={styles.itemTitle}>{item.name}</Text>
