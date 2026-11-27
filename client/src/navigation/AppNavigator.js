@@ -37,11 +37,19 @@ export default function AppNavigator() {
             <Stack.Navigator initialRouteName="Landing" screenOptions={{ headerShown: false }}>
                 <Stack.Screen name="Landing" component={LandingPage} />
                 <Stack.Screen name="Dashboard">
-                    {() => <RequireAuth><MainApp /></RequireAuth>}
-                </Stack.Screen>
-                <Stack.Screen name="Registration">
-                    {() => <RequireAuth><RegistrationForm /></RequireAuth>}
-                </Stack.Screen>
+    {() => (
+        <RequireAuth role="admin">
+            <MainApp />
+        </RequireAuth>
+    )}
+</Stack.Screen>
+<Stack.Screen name="Registration">
+    {() => (
+        <RequireAuth role="parent">
+            <RegistrationForm />
+        </RequireAuth>
+    )}
+</Stack.Screen>
                 <Stack.Screen name="Login" component={LoginPage} />
                 <Stack.Screen name="SignUp" component={SignUpPage} />
             </Stack.Navigator>

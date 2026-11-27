@@ -6,8 +6,8 @@ import { useAuth } from './AuthProvider.js';
 // Screens whose backend routes sit behind requireAuth need to wait for the stored
 // session to be restored before deciding — otherwise a returning signed-in user
 // briefly renders as signed out.
-export default function RequireAuth({ children }) {
-    const { isSignedIn, loading } = useAuth();
+export default function RequireAuth({ children,role }) {
+    const { isSignedIn, loading, role: userRole } = useAuth();
     const navigation = useNavigation();
 
     if (loading) {
@@ -19,6 +19,18 @@ export default function RequireAuth({ children }) {
             <View style={styles.container}>
                 <Text style={styles.message}>Please sign in to continue.</Text>
                 <Button title="Sign in" onPress={() => navigation.navigate('Login')} />
+            </View>
+        );
+    }
+
+
+    if (role && userRole !== role) {
+        return (
+            <View style={styles.container}>
+                <Text style={styles.message}>
+                    This page is for admins only
+                </Text>
+                <Button title="Back" onPress={() => navigation.goBack()} />
             </View>
         );
     }
