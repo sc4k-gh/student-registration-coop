@@ -81,7 +81,7 @@ export default function Page() {
         return;
       }
 
-      navigation.navigate('Dashboard');
+      navigation.navigate('Landing');
     } catch (error) {
       setErrorMessage(error.message);
     } finally {

@@ -1,5 +1,4 @@
 
-
 import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
@@ -50,14 +49,20 @@ export default function Page() {
     setSubmitting(true);
 
     try {
-      const { error } = await signIn(emailAddress.trim(), password);
+      const { data, error } = await signIn(emailAddress.trim(), password);
 
       if (error) {
         setErrorMessage(error.message);
         return;
       }
 
-      navigation.navigate('Dashboard');
+      const userRole = data.user?.app_metadata?.role;
+
+      if (userRole === 'admin') {
+        navigation.navigate('Dashboard');
+      } else {
+        navigation.navigate('Landing');
+      }
     } catch (error) {
       setErrorMessage(
         error instanceof Error && error.message
